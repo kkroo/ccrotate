@@ -53,10 +53,12 @@ program
 
 program
   .command('next')
-  .description('Switch to next account in rotation')
-  .action(async () => {
+  .description('Smart-rotate to next standard-tier account')
+  .option('-y, --yes', 'Auto-allow extra usage if no standard accounts')
+  .option('--deny', 'Never use extra usage, wait for reset instead')
+  .action(async (options) => {
     try {
-      await ccrotate.next();
+      await ccrotate.next({ yes: options.yes, deny: options.deny });
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
@@ -117,9 +119,42 @@ program
   .command('status')
   .alias('st')
   .description('Check current account usage tier (standard vs extra)')
-  .action(async () => {
+  .option('-q, --quiet', 'Machine-readable JSON output for hooks')
+  .action(async (options) => {
     try {
-      await ccrotate.status();
+      await ccrotate.status({ quiet: options.quiet });
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('config [key] [value]')
+  .description('Get/set config (e.g. config extraUsage prompt|allow|deny)')
+  .action(async (key, value) => {
+    try {
+      const config = ccrotate.loadConfig();
+      if (!key) {
+        console.log(chalk.bold('Current config:'));
+        for (const [k, v] of Object.entries(config)) {
+          console.log(chalk.gray(`  ${k}: `) + chalk.white(v));
+        }
+        console.log(chalk.gray('\nSettings:'));
+        console.log(chalk.gray('  extraUsage: prompt | allow | deny'));
+        return;
+      }
+      if (!value) {
+        console.log(chalk.gray(`${key}: `) + chalk.white(config[key] ?? '(not set)'));
+        return;
+      }
+      if (key === 'extraUsage' && !['prompt', 'allow', 'deny'].includes(value)) {
+        console.error(chalk.red('extraUsage must be: prompt, allow, or deny'));
+        process.exit(1);
+      }
+      config[key] = value;
+      ccrotate.saveConfig(config);
+      console.log(chalk.green(`✓ ${key} = ${value}`));
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
