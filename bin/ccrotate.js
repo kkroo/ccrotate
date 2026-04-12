@@ -93,6 +93,19 @@ program
   });
 
 program
+  .command('refresh-one')
+  .alias('r1')
+  .description('Refresh one stale account (for cron use)')
+  .action(async () => {
+    try {
+      await ccrotate.refreshOne();
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+program
   .command('export')
   .description('Export all profiles as compressed string')
   .action(async () => {
