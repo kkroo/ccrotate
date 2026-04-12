@@ -42,6 +42,17 @@ const baseConfig = {
             }
           });
           
+          // Copy claude-commands/ and scripts/ dirs
+          for (const dir of ['claude-commands', 'scripts']) {
+            if (fs.existsSync(dir)) {
+              const destDir = path.join('dist', dir);
+              fs.mkdirSync(destDir, { recursive: true });
+              for (const file of fs.readdirSync(dir)) {
+                fs.copyFileSync(path.join(dir, file), path.join(destDir, file));
+              }
+            }
+          }
+
           // Create optimized package.json
           const distPkg = {
             ...pkg,
@@ -49,13 +60,15 @@ const baseConfig = {
             bin: {
               ccrotate: './cli.js'
             },
+            scripts: {
+              postinstall: 'node scripts/postinstall.js'
+            },
             files: ['*']
           };
-          
+
           // Remove unnecessary fields for distribution
-          delete distPkg.scripts;
           delete distPkg.devDependencies;
-          
+
           fs.writeFileSync('dist/package.json', JSON.stringify(distPkg, null, 2));
           
           console.log('\n✅ Build completed! Files copied to dist/');

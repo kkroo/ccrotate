@@ -1,0 +1,1 @@
+Quick account overview — run `ccrotate list` and `ccrotate status --quiet`, then show a compact summary of all accounts with the current one marked. Include the extraUsage config setting from `ccrotate config`.
