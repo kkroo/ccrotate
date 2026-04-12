@@ -11,8 +11,9 @@ A powerful CLI tool designed for `claude-code` users who need to manage multiple
 ## ✨ Features
 
 - 🔀 **Smart Account Rotation** - Switch between accounts with a single command
+- 📊 **Usage Tier Detection** - Detects standard vs extra usage tier per account
+- 🎯 **Intelligent Switching** - Skips rate-limited and extra-usage accounts automatically
 - 📸 **Snapshot Management** - Save your current Claude session instantly
-- 🎯 **Intelligent Switching** - Automatic next-account detection with fallback
 - 💾 **Safe Storage** - Atomic file operations prevent data corruption
 - 📦 **Backup & Restore** - Export/import profiles with compression and integrity checking
 - 🔄 **Account Testing** - Verify and refresh tokens automatically
@@ -65,12 +66,13 @@ ccrotate switch user2@example.com
 ```
 
 ### ⏭️ `ccrotate next`
-Rotate to the next account in your saved list.
+Smart-rotate to the next available account. Tests each candidate and picks the first one on **standard** (base) usage tier, skipping rate-limited and extra-usage accounts.
 
 ```bash
 ccrotate next
-# Switching: user1@example.com -> user2@example.com
-# ✓ Switched to account: user2@example.com
+# 🔍 Finding best account (checking usage tier)...
+#   Testing user2@example.com... ✅ standard
+# ✓ Switched to account: user2@example.com (standard tier)
 ```
 
 ### 🗑️ `ccrotate remove <email>` (alias: `rm`)
@@ -106,15 +108,61 @@ ccrotate import "mp-gz-b64:f7dd8ae3:H4sIAAAAAAAAA5XRT..."
 ```
 
 ### 🔄 `ccrotate refresh` (alias: `rf`)
-Test all saved accounts and refresh expired tokens automatically.
+Test all saved accounts, refresh expired tokens, and show usage tier for each.
 
 ```bash
 ccrotate refresh
 # 🔄 Testing accounts and refreshing tokens...
-# 1  user1@example.com  ✅ Active    Hi there! How can I assist you today?
-# 2  user2@example.com  ❌ Failed    Invalid or expired token
-# 3  user3@example.com  ✅ Active 🔄 Hi! I'm Claude, an AI assistant...
+# #  Email                 Status       Tier            Result
+# 1  user1@example.com    ✅ Active    ✅ standard      Hi
+# 2  user2@example.com    ❌ Failed    -               You've hit your limit
+# 3  user3@example.com    ✅ Active    ⚠️  extended     Hi!
 ```
+
+### 📊 `ccrotate status` (alias: `st`)
+Check if the current account is on standard (base) or extra usage tier.
+
+```bash
+ccrotate status
+# 🔍 Checking usage tier for user1@example.com...
+# ✅ user1@example.com: standard tier (base usage)
+```
+
+## 🪝 Claude Code Hook Integration
+
+Auto-rotate on rate limit by adding a `Stop` hook to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "bash ~/.claude/hooks/ccrotate-on-limit.sh",
+        "timeout": 15,
+        "statusMessage": "Checking rate limits..."
+      }]
+    }]
+  }
+}
+```
+
+Create `~/.claude/hooks/ccrotate-on-limit.sh`:
+
+```bash
+#!/bin/bash
+INPUT=$(cat)
+STOP_REASON=$(echo "$INPUT" | jq -r '.stop_reason // ""' 2>/dev/null)
+
+if echo "$STOP_REASON" | grep -qiE 'hit.*limit|rate.?limit|usage.?limit|429|quota|exceeded'; then
+  ccrotate next 2>/dev/null
+  echo '{"systemMessage":"Rate limited! Auto-rotated. Restart Claude Code."}'
+else
+  echo '{}'
+fi
+```
+
+With smart `next`, this hook automatically skips extra-usage accounts and picks the first standard-tier one.
 
 ## 🏗️ How It Works
 
