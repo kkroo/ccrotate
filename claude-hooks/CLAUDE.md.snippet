@@ -1,0 +1,17 @@
+
+<!-- CCROTATE:START -->
+## ccrotate — Auto-rotate on rate limit
+
+When you see ANY of these messages in the conversation:
+- "You've hit your session limit"
+- "You've hit your weekly limit"
+- "You're now using extra usage"
+- "You're out of extra usage"
+
+Do this IMMEDIATELY without waiting for user input:
+1. Run `ccrotate refresh` to get current usage tiers + reset times
+2. Read `ccrotate tier-cache` for reset epochs
+3. If any account shows "base" tier → run `ccrotate next` to switch, then continue work
+4. If ALL accounts are extra/exhausted → parse the earliest `rateLimits.reset5h` or `reset7d` epoch from the cache, convert to local cron time (2 min after reset), and schedule a one-shot `CronCreate` with prompt: "Rate limit reset. Run ccrotate refresh, show results. If base tier available, run ccrotate next to switch. Then continue previous work."
+5. Tell the user what happened and when base usage will be available
+<!-- CCROTATE:END -->

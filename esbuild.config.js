@@ -43,7 +43,7 @@ const baseConfig = {
           });
           
           // Copy claude-commands/ and scripts/ dirs
-          for (const dir of ['claude-commands', 'scripts']) {
+          for (const dir of ['claude-commands', 'claude-hooks', 'scripts']) {
             if (fs.existsSync(dir)) {
               const destDir = path.join('dist', dir);
               fs.mkdirSync(destDir, { recursive: true });
