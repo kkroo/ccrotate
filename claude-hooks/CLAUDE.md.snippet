@@ -1,6 +1,13 @@
 <!-- CCROTATE:START -->
 ## ccrotate — Auto-rotate on rate limit
 
+### Session startup
+On FIRST message of every session, schedule a recurring cron to keep account data fresh:
+- Use CronCreate with cron `13 * * * *` (hourly at :13), recurring true, durable false
+- Prompt: `Run \`ccrotate refresh-one\` to refresh one stale account. Report result in under 20 words.`
+- This is zero-cost (GET API only, no Claude tokens consumed)
+
+### Rate limit handling
 When you see ANY of these messages in the conversation:
 - "You've hit your session limit"
 - "You've hit your weekly limit"
@@ -8,12 +15,11 @@ When you see ANY of these messages in the conversation:
 - "You're out of extra usage"
 
 Do this IMMEDIATELY without waiting for user input:
-1. Run `ccrotate next` to find a base-tier account and switch (no restart needed — credentials are picked up automatically)
-2. If `ccrotate next` switches successfully → tell the user and continue work
-3. If ALL accounts are exhausted → run `ccrotate next --wait` which:
-   - Switches to the earliest-reset account NOW (credentials on disk for when it resets)
+1. Read `ccrotate tier-cache` — if a base account exists, run `ccrotate switch <email>` (zero API calls, picked up automatically)
+2. If no base accounts in cache → run `ccrotate next --wait` which:
+   - Switches to the earliest-reset account NOW
    - Outputs JSON with `resetEpoch` (unix seconds)
    - Parse the `resetEpoch`, compute `delaySeconds = resetEpoch - now + 120` (2min buffer)
    - Use `ScheduleWakeup` with that delay and prompt: "Rate limit should have reset. Continue previous work."
-4. Tell the user which account was selected and when it resets
+3. Tell the user which account was selected and when it resets
 <!-- CCROTATE:END -->
