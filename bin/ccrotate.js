@@ -113,6 +113,19 @@ program
     }
   });
 
+program
+  .command('status')
+  .alias('st')
+  .description('Check current account usage tier (standard vs extra)')
+  .action(async () => {
+    try {
+      await ccrotate.status();
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
 program.parse();
 
 if (!process.argv.slice(2).length) {
