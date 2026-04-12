@@ -130,6 +130,23 @@ program
   });
 
 program
+  .command('tier-cache')
+  .description('Show cached tier data from last refresh/next (JSON)')
+  .action(async () => {
+    try {
+      const cache = ccrotate.loadTierCache();
+      if (!cache) {
+        console.log(JSON.stringify({ error: 'No cache. Run ccrotate refresh first.' }));
+        return;
+      }
+      console.log(JSON.stringify(cache, null, 2));
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+program
   .command('config [key] [value]')
   .description('Get/set config (e.g. config extraUsage prompt|allow|deny)')
   .action(async (key, value) => {
