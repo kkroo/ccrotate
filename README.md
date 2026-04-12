@@ -65,14 +65,28 @@ ccrotate switch user2@example.com
 # ✓ Switched to account: user2@example.com
 ```
 
-### ⏭️ `ccrotate next`
-Smart-rotate to the next available account. Tests each candidate and picks the first one on **standard** (base) usage tier, skipping rate-limited and extra-usage accounts.
+### ⏭️ `ccrotate next [--yes] [--deny]`
+Smart-rotate to the next available account. Tests each candidate's usage tier and picks the best option:
+
+1. **Standard tier available** → switches immediately
+2. **Only extra usage available** → prompts (or auto-allows with `--yes`, blocks with `--deny`)
+3. **All rate-limited** → shows reset schedule, offers to wait and auto-switch
 
 ```bash
 ccrotate next
 # 🔍 Finding best account (checking usage tier)...
 #   Testing user2@example.com... ✅ standard
 # ✓ Switched to account: user2@example.com (standard tier)
+
+ccrotate next --yes          # Auto-allow extra usage (for hooks/scripts)
+ccrotate next --deny         # Never use extra, wait for reset instead
+
+# When all accounts are rate-limited:
+# ❌ All accounts are rate-limited.
+# Reset schedule:
+#   user1@example.com: resets in 2h 15m (3:00 AM)
+#   user2@example.com: resets in 8h 30m (5:00 PM)
+# ? Wait 2h 15m and auto-switch to user1@example.com when it resets? (Y/n)
 ```
 
 ### 🗑️ `ccrotate remove <email>` (alias: `rm`)
@@ -126,11 +140,33 @@ Check if the current account is on standard (base) or extra usage tier.
 ccrotate status
 # 🔍 Checking usage tier for user1@example.com...
 # ✅ user1@example.com: standard tier (base usage)
+
+ccrotate status --quiet      # JSON output for scripts/hooks
+# {"email":"user1@example.com","tier":"standard","status":"ok"}
 ```
+
+### ⚙️ `ccrotate config [key] [value]`
+Get or set persistent configuration.
+
+```bash
+ccrotate config                          # Show all settings
+ccrotate config extraUsage               # Show current value
+ccrotate config extraUsage allow         # Always use extra usage
+ccrotate config extraUsage deny          # Never use extra usage
+ccrotate config extraUsage prompt        # Ask each time (default)
+```
+
+| Setting | Values | Description |
+|---------|--------|-------------|
+| `extraUsage` | `prompt` (default), `allow`, `deny` | What to do when only extra-usage accounts are available |
 
 ## 🪝 Claude Code Hook Integration
 
-Auto-rotate on rate limit by adding a `Stop` hook to `~/.claude/settings.json`:
+Two hooks for automatic account management:
+
+### Stop Hook — Auto-rotate on rate limit
+
+Add to `~/.claude/settings.json`:
 
 ```json
 {
@@ -147,22 +183,26 @@ Auto-rotate on rate limit by adding a `Stop` hook to `~/.claude/settings.json`:
 }
 ```
 
-Create `~/.claude/hooks/ccrotate-on-limit.sh`:
+When Claude Code hits a rate limit, this hook runs `ccrotate next --yes` to auto-switch to the best available account. Respects your `extraUsage` config setting.
 
-```bash
-#!/bin/bash
-INPUT=$(cat)
-STOP_REASON=$(echo "$INPUT" | jq -r '.stop_reason // ""' 2>/dev/null)
+### SessionStart Hook — Downgrade from extra usage
 
-if echo "$STOP_REASON" | grep -qiE 'hit.*limit|rate.?limit|usage.?limit|429|quota|exceeded'; then
-  ccrotate next 2>/dev/null
-  echo '{"systemMessage":"Rate limited! Auto-rotated. Restart Claude Code."}'
-else
-  echo '{}'
-fi
+```json
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "bash ~/.claude/hooks/ccrotate-check-tier.sh",
+        "timeout": 45,
+        "statusMessage": "Checking usage tier..."
+      }]
+    }]
+  }
+}
 ```
 
-With smart `next`, this hook automatically skips extra-usage accounts and picks the first standard-tier one.
+When starting a new session, checks if you're on extra usage and a standard-tier account is available — auto-switches if so.
 
 ## 🏗️ How It Works
 
