@@ -6,15 +6,17 @@ Steps:
 3. Run `ccrotate config` to show the extraUsage policy.
 4. Use `CronList` to check for existing scheduled ccrotate tasks.
 
-Present a summary table: Email, Active, Tier, Details (utilization + reset countdown)
+Present results:
+- Per-account table: Email, Active, Tier
+- If data source is [org], show org-level utilization + resets ONCE below the table (not per row)
+  because all accounts share the same org-level numbers
+- If data source is per-account (no [org] tag), show utilization per row
 
 If cache is missing or stale (>1 hour based on `updatedAt`), run `ccrotate refresh` to update it.
 
 IMPORTANT — Auto-switch scheduling:
-If ALL accounts are on "extra" or "exhausted" tier, schedule a one-shot CronCreate task
-at the earliest reset time (from rateLimits.reset5h or reset7d in the cache, whichever is sooner).
-The cron should fire 2 minutes after the reset epoch. Convert the epoch to local time for the cron expression.
-The prompt should be: "The rate limit just reset. Run `ccrotate refresh` to check base usage availability, show the results, and if base tier is available, run `ccrotate next` to switch. Then continue previous work."
-Set recurring: false so it fires once.
-
-If any account is already on "base" tier, no scheduling needed — just report status.
+If ALL accounts are on "extra" or "exhausted" tier, check CronList for existing ccrotate crons.
+If none scheduled, schedule a one-shot CronCreate at the earliest reset time
+(from rateLimits.reset5h or reset7d in the cache, whichever is sooner, +2 min).
+Prompt: "Rate limit reset. Run ccrotate refresh, show results. If base tier available, run ccrotate next to switch. Continue previous work."
+Set recurring: false.
