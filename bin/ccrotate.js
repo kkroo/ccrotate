@@ -56,9 +56,10 @@ program
   .description('Smart-rotate to next standard-tier account')
   .option('-y, --yes', 'Auto-allow extra usage if no standard accounts')
   .option('--deny', 'Never use extra usage, wait for reset instead')
+  .option('--wait', 'Switch to earliest-reset account and output reset epoch (for auto-resume)')
   .action(async (options) => {
     try {
-      await ccrotate.next({ yes: options.yes, deny: options.deny });
+      await ccrotate.next({ yes: options.yes, deny: options.deny, wait: options.wait });
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
