@@ -1,5 +1,9 @@
-Refresh all Claude Code accounts — test each account's status and usage tier.
+Refresh all Claude Code accounts — test each account's real usage tier.
 
-Run `ccrotate refresh` and report the results. This uses the platform.claude.com API directly (no claude -p), so it works inside active sessions.
+IMPORTANT: This spawns `claude -p` which CANNOT run inside an active Claude Code session.
+Tell the user to run from a **separate terminal window**:
+```
+ccrotate refresh
+```
 
-After refresh completes, run `ccrotate tier-cache` and present a clean summary table.
+Then come back here and run `/ccrotate-status` to view the cached results.
