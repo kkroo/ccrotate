@@ -1,16 +1,15 @@
-Show Claude Code account summary with usage tiers and reset timers.
+Show Claude Code account summary from cached tier data.
 
 Steps:
-1. Run `ccrotate list` to get the account list and identify the current (starred) account.
-2. Run `ccrotate tier-cache` to get cached tier data from the last refresh.
+1. Run `ccrotate list` to get accounts and identify the current (starred) one.
+2. Run `ccrotate tier-cache` to get cached tier data.
 3. Run `ccrotate config` to show the extraUsage policy.
 4. Check for background timers: `ps aux | grep 'ccrotate next' | grep -v grep`
 
-Present a summary table combining all data:
-- Email, Active (star if current), Status, Tier, Notes (rate-limit reset time if available)
+Present a clean summary table: Email, Active, Status, Tier
 
 IMPORTANT:
-- Do NOT run `ccrotate refresh`, `ccrotate status`, or `ccrotate next` — these spawn `claude -p` which conflicts with the active Claude Code session and will timeout/lock.
+- Do NOT run `ccrotate refresh`, `ccrotate status`, `ccrotate next`, or any command that spawns `claude -p`. These WILL timeout inside an active Claude Code session.
 - Only read cached data via `ccrotate tier-cache` and `ccrotate list`.
-- If tier-cache is missing or stale (>1 hour old based on `updatedAt`), tell the user to run `! ccrotate refresh` from the terminal prompt (the `!` prefix runs it outside Claude Code's process lock).
-- The cache is populated by running `ccrotate refresh` or `ccrotate next` from OUTSIDE an active session (terminal, hooks, or `!` prefix).
+- If tier-cache is missing or stale (>1 hour based on `updatedAt`), tell the user: "Run `ccrotate refresh` from a **separate terminal window** to update."
+- Do NOT suggest using `!` prefix — it still runs inside the Claude Code process and will timeout.
