@@ -30,15 +30,42 @@ fi
 [ ! -f "$CREDS" ] && echo '{}' && exit 0
 [ ! -f "$PROFILES" ] && echo '{}' && exit 0
 
-# Is current token expiring in < 1 min?
+# Track last validation — don't re-check on every message (too slow)
+VALIDATION_CACHE=~/.ccrotate/last-validation.txt
+NOW=$(date +%s)
+LAST_VALIDATED=0
+if [ -f "$VALIDATION_CACHE" ]; then
+  LAST_VALIDATED=$(cat "$VALIDATION_CACHE" 2>/dev/null || echo 0)
+fi
+VALIDATION_AGE=$((NOW - LAST_VALIDATED))
+
 EXPIRES_AT=$(jq -r '.claudeAiOauth.expiresAt // 0' "$CREDS" 2>/dev/null)
-NOW_MS=$(($(date +%s) * 1000))
+NOW_MS=$((NOW * 1000))
 EXPIRES_IN_MIN=$(( (EXPIRES_AT - NOW_MS) / 60000 ))
 
-if [ "$EXPIRES_IN_MIN" -gt 1 ] 2>/dev/null; then
-  # Token still valid, let the session continue
+# If token is fresh-ish and validated recently, skip the check
+if [ "$EXPIRES_IN_MIN" -gt 5 ] 2>/dev/null && [ "$VALIDATION_AGE" -lt 300 ] 2>/dev/null; then
   echo '{}'
   exit 0
+fi
+
+# Validate current token against the API (GET /api/oauth/usage, no tokens burned)
+TOKEN=$(jq -r '.claudeAiOauth.accessToken // empty' "$CREDS" 2>/dev/null)
+if [ -n "$TOKEN" ]; then
+  HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "anthropic-beta: oauth-2025-04-20" \
+    -H "x-app: cli" \
+    "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
+
+  # Token valid (200) or rate-limited (429) — both mean token is accepted
+  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "429" ]; then
+    echo "$NOW" > "$VALIDATION_CACHE"
+    echo '{}'
+    exit 0
+  fi
+
+  # 401/403 — token is rejected. Fall through to recovery.
 fi
 
 # Current token expired — try to recover
