@@ -100,6 +100,13 @@ program
   });
 
 program
+  .command('repair')
+  .description('Scan all accounts, mark stale ones, recover recoverable')
+  .action(async () => {
+    try { await ccrotate.repair(); } catch (error) { console.error(chalk.red(`Error: ${error.message}`)); process.exit(1); }
+  });
+
+program
   .command('refresh-one')
   .alias('r1')
   .description('Refresh one stale account (for cron use)')
