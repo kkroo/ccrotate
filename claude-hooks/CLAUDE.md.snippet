@@ -2,27 +2,23 @@
 ## ccrotate — Auto-rotate on rate limit
 
 ### Session startup
-On FIRST message of every session, schedule TWO recurring crons:
-
-1. **Data refresh** — CronCreate cron `13 * * * *`, recurring true
-   - Prompt: `Run \`ccrotate refresh-one\` to refresh one stale account. Report result in under 20 words.`
-
-2. **Proactive rotation** — CronCreate cron `*/5 * * * *`, recurring true
-   - Prompt: `Read \`ccrotate tier-cache\` silently. If current account (from ~/.claude.json oauthAccount.emailAddress) has 5h utilization >=95% or serviceTier is extra/exhausted, find a base account in cache and run \`ccrotate switch <email>\`. Report only if switched. Otherwise say nothing.`
+Schedule a data refresh cron:
+- CronCreate cron `13 * * * *`, recurring true
+- Prompt: `Run \`ccrotate refresh-one\` to refresh one stale account. Report result in under 20 words.`
 
 ### Rate limit handling
-When you see ANY of these messages in the conversation:
-- "You've hit your session limit"
-- "You've hit your weekly limit"
-- "You're now using extra usage"
-- "You're out of extra usage"
+When rate limited ("You've hit your limit", "You're out of extra usage"):
 
-Do this IMMEDIATELY without waiting for user input:
-1. Read `ccrotate tier-cache` — if a base account exists, run `ccrotate switch <email>` (zero API calls, picked up automatically)
-2. If no base accounts in cache → run `ccrotate next --wait` which:
-   - Switches to the earliest-reset account NOW
-   - Outputs JSON with `resetEpoch` (unix seconds)
-   - Parse the `resetEpoch`, compute `delaySeconds = resetEpoch - now + 120` (2min buffer)
-   - Use `ScheduleWakeup` with that delay and prompt: "Rate limit should have reset. Continue previous work."
-3. Tell the user which account was selected and when it resets
+1. Run `ccrotate tier-cache` and parse `rateLimits.reset5h` / `rateLimits.reset7d` (unix epoch seconds)
+2. Find the account with the **earliest future reset** where `reset5h` or `reset7d` has passed or is soonest
+3. **Do NOT switch now** — the target account isn't usable until its reset time
+4. Stay on current account. Compute `delaySeconds = earliest_reset_epoch - now + 120`
+5. Use `ScheduleWakeup` with that delay. Prompt: `Rate limit reset. Run \`ccrotate switch <target_email>\` then continue previous work.`
+6. Tell the user: which account, exact reset time, how long to wait
+
+CRITICAL RULES:
+- NEVER switch to an account that hasn't reset yet (check timestamp > now)
+- NEVER switch based on tier-cache tier alone (stale data causes wrong switches)
+- Only switch to accounts with per-account data (utilization5h/7d not null)
+- The UserPromptSubmit hook handles preemptive switching when refresh-one detects near-limit
 <!-- CCROTATE:END -->
