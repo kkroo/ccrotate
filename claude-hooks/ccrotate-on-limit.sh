@@ -55,11 +55,32 @@ elif [ "$CURRENT_TIER" = "exhausted" ] || [ "$CURRENT_TIER" = "extra" ]; then
 fi
 
 if [ "$SHOULD_SWITCH" = "true" ] && [ -n "$BEST_BASE" ]; then
-  # Switch to base account (zero API calls, just file + keychain update)
-  ccrotate switch "$BEST_BASE" 2>/dev/null
-  echo "$(date -Iseconds) SWITCHED to $BEST_BASE" >> "$LOG"
-  echo "{\"outputToUser\":\"Switched to $BEST_BASE (base tier). Credentials updated automatically.\"}"
-  exit 0
+  # Try switching — ccrotate switch exits non-zero if token refresh fails
+  SWITCH_OUTPUT=$(ccrotate switch "$BEST_BASE" 2>&1)
+  if echo "$SWITCH_OUTPUT" | grep -q "✓ Switched"; then
+    echo "$(date -Iseconds) SWITCHED to $BEST_BASE" >> "$LOG"
+    echo "{\"outputToUser\":\"Switched to $BEST_BASE (base tier). Credentials updated automatically.\"}"
+    exit 0
+  fi
+
+  echo "$(date -Iseconds) switch to $BEST_BASE FAILED: $(echo "$SWITCH_OUTPUT" | head -1)" >> "$LOG"
+
+  # Try remaining base accounts from cache
+  if [ -f "$CACHE" ] && command -v jq &>/dev/null; then
+    OTHER_BASES=$(jq -r --arg e "$CURRENT_EMAIL" --arg tried "$BEST_BASE" \
+      '[.accounts[] | select(.serviceTier == "base" and .email != $e and .email != $tried)] | .[].email' "$CACHE" 2>/dev/null)
+    for ALT in $OTHER_BASES; do
+      SWITCH_OUTPUT=$(ccrotate switch "$ALT" 2>&1)
+      if echo "$SWITCH_OUTPUT" | grep -q "✓ Switched"; then
+        echo "$(date -Iseconds) SWITCHED to $ALT (fallback)" >> "$LOG"
+        echo "{\"outputToUser\":\"Switched to $ALT (base tier). Credentials updated automatically.\"}"
+        exit 0
+      fi
+      echo "$(date -Iseconds) switch to $ALT FAILED" >> "$LOG"
+    done
+  fi
+
+  echo "$(date -Iseconds) all base account switches failed" >> "$LOG"
 fi
 
 if [ "$RATE_LIMITED" = "true" ] && [ -z "$BEST_BASE" ]; then
