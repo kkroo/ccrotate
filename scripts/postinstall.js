@@ -70,25 +70,46 @@ try {
     }]
   };
 
+  const preemptiveHook = {
+    hooks: [{
+      type: 'command',
+      command: `bash ${path.join(claudeDir, 'hooks', 'ccrotate-preemptive.sh')}`,
+      timeout: 10,
+      statusMessage: 'ccrotate check...'
+    }]
+  };
+
   const hasStopHook = (settings.hooks.Stop || []).some(h =>
     h.hooks?.some(hh => hh.command?.includes('ccrotate'))
   );
   const hasSessionHook = (settings.hooks.SessionStart || []).some(h =>
     h.hooks?.some(hh => hh.command?.includes('ccrotate'))
   );
+  const hasPreemptiveHook = (settings.hooks.UserPromptSubmit || []).some(h =>
+    h.hooks?.some(hh => hh.command?.includes('ccrotate-preemptive'))
+  );
 
+  let changed = false;
   if (!hasStopHook) {
     if (!settings.hooks.Stop) settings.hooks.Stop = [];
     settings.hooks.Stop.push(stopHook);
     console.log('  ✓ Registered ccrotate Stop hook in settings.json');
+    changed = true;
   }
   if (!hasSessionHook) {
     if (!settings.hooks.SessionStart) settings.hooks.SessionStart = [];
     settings.hooks.SessionStart.push(sessionStartHook);
     console.log('  ✓ Registered ccrotate SessionStart hook in settings.json');
+    changed = true;
+  }
+  if (!hasPreemptiveHook) {
+    if (!settings.hooks.UserPromptSubmit) settings.hooks.UserPromptSubmit = [];
+    settings.hooks.UserPromptSubmit.push(preemptiveHook);
+    console.log('  ✓ Registered ccrotate UserPromptSubmit hook in settings.json');
+    changed = true;
   }
 
-  if (!hasStopHook || !hasSessionHook) {
+  if (changed) {
     fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2), 'utf8');
   }
 } catch (e) {
