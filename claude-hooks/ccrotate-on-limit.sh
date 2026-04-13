@@ -1,69 +1,85 @@
 #!/bin/bash
-# Auto-rotate ccrotate account when rate limited or on extra usage.
-# Hook: Stop — fires when Claude Code session ends.
-# Schedules account switch at reset time so next session uses base usage.
+# Auto-rotate ccrotate account when rate limited.
+# Hook: Stop — fires after each Claude response.
+#
+# Strategy: Always check tier-cache. If current account is exhausted/extra
+# and a base account exists, switch to it. No API calls needed.
+# Also checks last_assistant_message for rate limit signals.
 
 INPUT=$(cat)
-STOP_REASON=$(echo "$INPUT" | jq -r '.stop_reason // ""' 2>/dev/null)
+LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // ""' 2>/dev/null)
+
+# Always re-snap current account to keep refresh tokens fresh
+ccrotate snap --force >/dev/null 2>&1
 
 LOG=~/.claude/hooks/ccrotate-debug.log
 touch "$LOG" 2>/dev/null
 LINES=$(wc -l < "$LOG" 2>/dev/null || echo 0)
 if [ "$LINES" -gt 100 ]; then : > "$LOG"; fi
-echo "$(date -Iseconds) stop_reason=$STOP_REASON" >> "$LOG"
 
-if echo "$STOP_REASON" | grep -qiE 'hit.*limit|rate.?limit|usage.?limit|too many|429|quota|exceeded|capacity'; then
-  # Try switching to a base-usage account
-  RESULT=$(ccrotate next 2>/dev/null) || true
-  NEW=$(echo "$RESULT" | grep -iE 'switched to' | sed 's/.*account: //' | sed 's/ (.*//')
-  [ -z "$NEW" ] && NEW=""
+# Check 1: Is the last message a rate limit indicator?
+RATE_LIMITED=false
+if echo "$LAST_MSG" | grep -qiE 'hit.*limit|rate.?limit|usage.?limit|too many|429|quota|exceeded|capacity|out of.*usage'; then
+  RATE_LIMITED=true
+fi
 
-  # Update keychain (macOS)
-  if [ -f ~/.claude/.credentials.json ] && command -v security &>/dev/null; then
-    security delete-generic-password -s "Claude Code-credentials" -a "$(whoami)" >/dev/null 2>&1
-    security add-generic-password -s "Claude Code-credentials" -a "$(whoami)" -w "$(cat ~/.claude/.credentials.json)" >/dev/null 2>&1
+# Check 2: Is the current account on extra/exhausted in tier-cache?
+CACHE=~/.ccrotate/tier-cache.json
+CURRENT_EMAIL=""
+CURRENT_TIER=""
+BEST_BASE=""
+
+if [ -f "$CACHE" ] && command -v jq &>/dev/null; then
+  # Get current account email from ~/.claude.json
+  CURRENT_EMAIL=$(jq -r '.oauthAccount.emailAddress // ""' ~/.claude.json 2>/dev/null)
+
+  if [ -n "$CURRENT_EMAIL" ]; then
+    CURRENT_TIER=$(jq -r --arg e "$CURRENT_EMAIL" '.accounts[] | select(.email == $e) | .serviceTier // ""' "$CACHE" 2>/dev/null)
+
+    # Find first base account that isn't current
+    BEST_BASE=$(jq -r --arg e "$CURRENT_EMAIL" '[.accounts[] | select(.serviceTier == "base" and .email != $e)] | .[0].email // ""' "$CACHE" 2>/dev/null)
   fi
+fi
 
-  if [ -n "$NEW" ]; then
-    echo "{\"systemMessage\":\"Rate limited. Switched to ${NEW}. Restart Claude Code to apply.\"}"
-    exit 0
+echo "$(date -Iseconds) rate_limited=$RATE_LIMITED current=$CURRENT_EMAIL tier=$CURRENT_TIER best_base=$BEST_BASE" >> "$LOG"
+
+# Only act if: rate limited OR current account is not base
+SHOULD_SWITCH=false
+if [ "$RATE_LIMITED" = "true" ]; then
+  SHOULD_SWITCH=true
+elif [ "$CURRENT_TIER" = "exhausted" ] || [ "$CURRENT_TIER" = "extra" ]; then
+  # Only auto-switch from extra if there's a base account available
+  if [ -n "$BEST_BASE" ]; then
+    SHOULD_SWITCH=true
   fi
+fi
 
-  # No base accounts available — schedule switch at reset time
-  CACHE=~/.ccrotate/tier-cache.json
-  RESET_5H="" ; RESET_7D=""
-  if [ -f "$CACHE" ]; then
-    RESET_5H=$(jq -r '[.accounts[].rateLimits.reset5h // empty] | map(select(. > 0)) | min // empty' "$CACHE" 2>/dev/null)
-    RESET_7D=$(jq -r '[.accounts[].rateLimits.reset7d // empty] | map(select(. > 0)) | min // empty' "$CACHE" 2>/dev/null)
-  fi
+if [ "$SHOULD_SWITCH" = "true" ] && [ -n "$BEST_BASE" ]; then
+  # Switch to base account (zero API calls, just file + keychain update)
+  ccrotate switch "$BEST_BASE" 2>/dev/null
+  echo "$(date -Iseconds) SWITCHED to $BEST_BASE" >> "$LOG"
+  echo "{\"outputToUser\":\"Switched to $BEST_BASE (base tier). Credentials updated automatically.\"}"
+  exit 0
+fi
 
-  NOW=$(date +%s)
+if [ "$RATE_LIMITED" = "true" ] && [ -z "$BEST_BASE" ]; then
+  # All accounts exhausted — write pending-reset marker for SessionStart hook
   RESET_EPOCH=""
-  RESET_LABEL=""
-  for E in $RESET_5H $RESET_7D; do
-    if [ -n "$E" ] && [ "$E" -gt "$NOW" ] 2>/dev/null; then
-      if [ -z "$RESET_EPOCH" ] || [ "$E" -lt "$RESET_EPOCH" ]; then
-        RESET_EPOCH=$E
-        [ "$E" = "$RESET_5H" ] && RESET_LABEL="5h" || RESET_LABEL="7d"
-      fi
-    fi
-  done
+  if [ -f "$CACHE" ]; then
+    RESET_EPOCH=$(jq -r '[.accounts[].rateLimits | (.reset5h // .resetAt // empty)] | map(select(. != null)) | map(if type == "string" then (split("+")[0] + "Z" | fromdateiso8601) else . end) | map(select(. > now)) | min // empty' "$CACHE" 2>/dev/null)
+  fi
 
   if [ -n "$RESET_EPOCH" ]; then
-    WAIT_MIN=$(( (RESET_EPOCH - NOW) / 60 ))
-    RESET_TIME=$(date -r "$RESET_EPOCH" "+%-l:%M %p" 2>/dev/null || date -d "@$RESET_EPOCH" "+%-l:%M %p" 2>/dev/null || echo "?")
-
-    # Write pending reset marker for SessionStart hook to pick up
     MARKER=~/.ccrotate/pending-reset.json
     cat > "$MARKER" <<EOMARKER
-{"resetEpoch":${RESET_EPOCH},"resetLabel":"${RESET_LABEL}","createdAt":"$(date -Iseconds)"}
+{"resetEpoch":${RESET_EPOCH},"resetLabel":"auto","createdAt":"$(date -Iseconds)"}
 EOMARKER
-
-    echo "$(date -Iseconds) Wrote pending reset marker: ${RESET_LABEL} at ${RESET_TIME} (${WAIT_MIN}m)" >> "$LOG"
-    echo "{\"systemMessage\":\"All on extra usage. Reset at ${RESET_TIME} (${RESET_LABEL}, ${WAIT_MIN}m). Next session will auto-schedule switch.\"}"
+    echo "$(date -Iseconds) All exhausted, wrote pending-reset marker epoch=$RESET_EPOCH" >> "$LOG"
+    echo "{\"outputToUser\":\"All accounts exhausted. Scheduled auto-switch at reset.\"}"
   else
-    echo "{\"systemMessage\":\"All accounts on extra usage. No reset time available.\"}"
+    echo "{}"
   fi
-else
-  echo "{}"
+  exit 0
 fi
+
+echo "{}"

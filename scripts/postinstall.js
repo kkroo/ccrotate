@@ -45,7 +45,57 @@ if (fs.existsSync(hooksSrc)) {
   }
 }
 
-// 3. CLAUDE.md snippet — append if marker not already present
+// 3. Register hooks in settings.json
+const settingsFile = path.join(claudeDir, 'settings.json');
+try {
+  const settings = fs.existsSync(settingsFile)
+    ? JSON.parse(fs.readFileSync(settingsFile, 'utf8'))
+    : {};
+  if (!settings.hooks) settings.hooks = {};
+
+  const stopHook = {
+    hooks: [{
+      type: 'command',
+      command: `bash ${path.join(claudeDir, 'hooks', 'ccrotate-on-limit.sh')}`,
+      timeout: 15,
+      statusMessage: 'Checking rate limits...'
+    }]
+  };
+  const sessionStartHook = {
+    hooks: [{
+      type: 'command',
+      command: `bash ${path.join(claudeDir, 'hooks', 'ccrotate-check-tier.sh')}`,
+      timeout: 45,
+      statusMessage: 'Checking usage tier...'
+    }]
+  };
+
+  const hasStopHook = (settings.hooks.Stop || []).some(h =>
+    h.hooks?.some(hh => hh.command?.includes('ccrotate'))
+  );
+  const hasSessionHook = (settings.hooks.SessionStart || []).some(h =>
+    h.hooks?.some(hh => hh.command?.includes('ccrotate'))
+  );
+
+  if (!hasStopHook) {
+    if (!settings.hooks.Stop) settings.hooks.Stop = [];
+    settings.hooks.Stop.push(stopHook);
+    console.log('  ✓ Registered ccrotate Stop hook in settings.json');
+  }
+  if (!hasSessionHook) {
+    if (!settings.hooks.SessionStart) settings.hooks.SessionStart = [];
+    settings.hooks.SessionStart.push(sessionStartHook);
+    console.log('  ✓ Registered ccrotate SessionStart hook in settings.json');
+  }
+
+  if (!hasStopHook || !hasSessionHook) {
+    fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2), 'utf8');
+  }
+} catch (e) {
+  console.log(`  Note: Could not update settings.json: ${e.message}`);
+}
+
+// 4. CLAUDE.md snippet — append if marker not already present
 const snippetFile = path.join(hooksSrc, 'CLAUDE.md.snippet');
 const claudeMd = path.join(claudeDir, 'CLAUDE.md');
 if (fs.existsSync(snippetFile)) {

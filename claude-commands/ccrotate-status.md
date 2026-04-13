@@ -1,22 +1,16 @@
-Show Claude Code account summary with usage tiers and schedule auto-switch if needed.
+Show Claude Code account summary with usage tiers and reset timers.
 
 Steps:
-1. Run `ccrotate list` to get accounts and identify the current (starred) one.
-2. Run `ccrotate tier-cache` to get cached tier data.
+1. Run `ccrotate list` to get the account list and identify the current (starred) account.
+2. Run `ccrotate tier-cache` to get cached tier data from the last refresh.
 3. Run `ccrotate config` to show the extraUsage policy.
-4. Use `CronList` to check for existing scheduled ccrotate tasks.
+4. Check for background timers: `ps aux | grep 'ccrotate next' | grep -v grep`
 
-Present results:
-- Per-account table: Email, Active, Tier
-- If data source is [org], show org-level utilization + resets ONCE below the table (not per row)
-  because all accounts share the same org-level numbers
-- If data source is per-account (no [org] tag), show utilization per row
+Present a summary table combining all data:
+- Email, Active (star if current), Status, Tier, Notes (rate-limit reset time if available)
 
-If cache is missing or stale (>1 hour based on `updatedAt`), run `ccrotate refresh` to update it.
-
-IMPORTANT — Auto-switch scheduling:
-If ALL accounts are on "extra" or "exhausted" tier, check CronList for existing ccrotate crons.
-If none scheduled, schedule a one-shot CronCreate at the earliest reset time
-(from rateLimits.reset5h or reset7d in the cache, whichever is sooner, +2 min).
-Prompt: "Rate limit reset. Run ccrotate refresh, show results. If base tier available, run ccrotate next to switch. Continue previous work."
-Set recurring: false.
+IMPORTANT:
+- Do NOT run `ccrotate refresh`, `ccrotate status`, or `ccrotate next` — these spawn `claude -p` which conflicts with the active Claude Code session and will timeout/lock.
+- Only read cached data via `ccrotate tier-cache` and `ccrotate list`.
+- If tier-cache is missing or stale (>1 hour old based on `updatedAt`), tell the user to run `! ccrotate refresh` from the terminal prompt (the `!` prefix runs it outside Claude Code's process lock).
+- The cache is populated by running `ccrotate refresh` or `ccrotate next` from OUTSIDE an active session (terminal, hooks, or `!` prefix).
