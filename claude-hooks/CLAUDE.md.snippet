@@ -2,10 +2,13 @@
 ## ccrotate — Auto-rotate on rate limit
 
 ### Session startup
-On FIRST message of every session, schedule a recurring cron to keep account data fresh:
-- Use CronCreate with cron `13 * * * *` (hourly at :13), recurring true, durable false
-- Prompt: `Run \`ccrotate refresh-one\` to refresh one stale account. Report result in under 20 words.`
-- This is zero-cost (GET API only, no Claude tokens consumed)
+On FIRST message of every session, schedule TWO recurring crons:
+
+1. **Data refresh** — CronCreate cron `13 * * * *`, recurring true
+   - Prompt: `Run \`ccrotate refresh-one\` to refresh one stale account. Report result in under 20 words.`
+
+2. **Proactive rotation** — CronCreate cron `*/5 * * * *`, recurring true
+   - Prompt: `Read \`ccrotate tier-cache\` silently. If current account (from ~/.claude.json oauthAccount.emailAddress) has 5h utilization >=95% or serviceTier is extra/exhausted, find a base account in cache and run \`ccrotate switch <email>\`. Report only if switched. Otherwise say nothing.`
 
 ### Rate limit handling
 When you see ANY of these messages in the conversation:
