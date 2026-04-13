@@ -4,7 +4,7 @@
 ### Session startup
 Schedule a data refresh cron:
 - CronCreate cron `13 * * * *`, recurring true
-- Prompt: `Run \`ccrotate refresh-one\` to refresh one stale account. Report result in under 20 words.`
+- Prompt: `Silently run \`ccrotate refresh-one\`. Do not respond with any text or summary. Only respond if there is an error that blocks the refresh.`
 
 ### Rate limit handling
 When rate limited ("You've hit your limit", "You're out of extra usage"):
