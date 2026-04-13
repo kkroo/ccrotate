@@ -49,14 +49,19 @@ if [ "$EXPIRES_IN_MIN" -gt 5 ] 2>/dev/null && [ "$VALIDATION_AGE" -lt 300 ] 2>/d
   exit 0
 fi
 
-# Validate current token against the API (GET /api/oauth/usage, no tokens burned)
+# Validate current token against /v1/messages (what Claude Code actually uses)
+# /api/oauth/usage has different validation — a token passing it can still 401 here
 TOKEN=$(jq -r '.claudeAiOauth.accessToken // empty' "$CREDS" 2>/dev/null)
 if [ -n "$TOKEN" ]; then
-  HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
+  HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 \
+    -X POST \
+    -H "Content-Type: application/json" \
     -H "Authorization: Bearer $TOKEN" \
+    -H "anthropic-version: 2023-06-01" \
     -H "anthropic-beta: oauth-2025-04-20" \
     -H "x-app: cli" \
-    "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
+    -d '{"model":"claude-haiku-4-5-20251001","max_tokens":1,"messages":[{"role":"user","content":"x"}]}' \
+    "https://api.anthropic.com/v1/messages" 2>/dev/null)
 
   # Token valid (200) or rate-limited (429) — both mean token is accepted
   if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "429" ]; then
