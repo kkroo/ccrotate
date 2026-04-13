@@ -134,9 +134,10 @@ program
 program
   .command('import <data>')
   .description('Import profiles from compressed string')
-  .action(async (data) => {
+  .option('--force', 'Skip confirmation prompt')
+  .action(async (data, options) => {
     try {
-      await ccrotate.import(data);
+      await ccrotate.import(data, { force: options.force });
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
