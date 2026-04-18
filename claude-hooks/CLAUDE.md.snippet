@@ -3,7 +3,7 @@
 
 ### Session startup
 Schedule a data refresh cron:
-- CronCreate cron `13 * * * *`, recurring true
+- CronCreate cron `17 */5 * * *`, recurring true, durable false
 - Prompt: `Silently run \`ccrotate refresh-one\`. Do not respond with any text or summary. Only respond if there is an error that blocks the refresh.`
 
 ### Rate limit handling
