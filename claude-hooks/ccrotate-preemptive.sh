@@ -63,9 +63,25 @@ if [ -n "$TOKEN" ]; then
     -d '{"model":"claude-haiku-4-5-20251001","max_tokens":1,"messages":[{"role":"user","content":"x"}]}' \
     "https://api.anthropic.com/v1/messages" 2>/dev/null)
 
-  # Token valid (200) or rate-limited (429) — both mean token is accepted
-  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "429" ]; then
+  # Token valid — all good
+  if [ "$HTTP_CODE" = "200" ]; then
     echo "$NOW" > "$VALIDATION_CACHE"
+    echo '{}'
+    exit 0
+  fi
+
+  # 429 — rate limited. Proactively switch before Claude hits the wall.
+  if [ "$HTTP_CODE" = "429" ]; then
+    echo "$NOW" > "$VALIDATION_CACHE"
+    CURRENT_EMAIL=$(jq -r '.oauthAccount.emailAddress // ""' ~/.claude.json 2>/dev/null)
+    # Try ccrotate next (non-interactive, deny extra)
+    SWITCH_RESULT=$(ccrotate next --deny 2>&1)
+    if echo "$SWITCH_RESULT" | grep -q "✓ Switched"; then
+      NEW_EMAIL=$(echo "$SWITCH_RESULT" | grep -oP 'Switched to account: \K[^ ]+')
+      echo "{\"outputToUser\":\"Proactive switch: $CURRENT_EMAIL rate-limited → $NEW_EMAIL\"}"
+      exit 0
+    fi
+    # No account available — let it fail naturally
     echo '{}'
     exit 0
   fi
