@@ -90,6 +90,22 @@ try:
     cache = json.load(open('$CACHE'))
     current = '$CURRENT_EMAIL'
     now = time.time()
+
+    # Step 1: Find any account that's usable right now (under threshold)
+    for a in cache.get('accounts', []):
+        if a['email'] == current: continue
+        rl = a.get('rateLimits') or {}
+        u5h = rl.get('utilization5h')
+        u7d = rl.get('utilization7d')
+        if u5h is None and u7d is None: continue
+        tier = a.get('serviceTier', '')
+        if tier == 'exhausted': continue
+        if (u5h is not None and u5h >= 95) or (u7d is not None and u7d >= 95): continue
+        # This account is usable now
+        print(f'READY|{a[\"email\"]}|{int(now)}')
+        sys.exit(0)
+
+    # Step 2: No usable account — find the one with earliest reset
     best = None
     for a in cache.get('accounts', []):
         if a['email'] == current: continue
