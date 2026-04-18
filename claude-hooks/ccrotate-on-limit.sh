@@ -91,7 +91,9 @@ try:
     current = '$CURRENT_EMAIL'
     now = time.time()
 
-    # Step 1: Find any account that's usable right now (under threshold)
+    # Step 1: Find any account that's usable right now
+    # First pass: accounts with per-account data showing headroom
+    # Second pass: accounts showing 'base' tier (even without per-account data)
     for a in cache.get('accounts', []):
         if a['email'] == current: continue
         rl = a.get('rateLimits') or {}
@@ -101,9 +103,15 @@ try:
         tier = a.get('serviceTier', '')
         if tier == 'exhausted': continue
         if (u5h is not None and u5h >= 95) or (u7d is not None and u7d >= 95): continue
-        # This account is usable now
         print(f'READY|{a[\"email\"]}|{int(now)}')
         sys.exit(0)
+    # Second pass: 'base' tier without utilization data — best guess from org-level
+    for a in cache.get('accounts', []):
+        if a['email'] == current: continue
+        tier = a.get('serviceTier', '')
+        if tier == 'base':
+            print(f'READY|{a[\"email\"]}|{int(now)}')
+            sys.exit(0)
 
     # Step 2: No usable account — find the one with earliest reset
     best = None
