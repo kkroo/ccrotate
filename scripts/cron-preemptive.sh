@@ -20,7 +20,7 @@ ccrotate refresh-one >/dev/null 2>&1
 [ ! -f "$CACHE" ] && exit 0
 
 # Get active account from ccrotate (starred account), not ~/.claude.json (can be stale)
-CURRENT_EMAIL=$(ccrotate list 2>/dev/null | grep '★' | awk '{print $3}')
+CURRENT_EMAIL=$(ccrotate list 2>/dev/null | grep '★' | grep -v 'Email' | awk '{print $3}')
 [ -z "$CURRENT_EMAIL" ] && exit 0
 
 SHOULD_ROTATE=$(python3 -c "
