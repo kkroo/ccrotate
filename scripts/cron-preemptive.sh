@@ -19,7 +19,8 @@ ccrotate refresh-one >/dev/null 2>&1
 # Step 2: Check current account utilization from cache
 [ ! -f "$CACHE" ] && exit 0
 
-CURRENT_EMAIL=$(jq -r '.oauthAccount.emailAddress // ""' ~/.claude.json 2>/dev/null)
+# Get active account from ccrotate (starred account), not ~/.claude.json (can be stale)
+CURRENT_EMAIL=$(ccrotate list 2>/dev/null | grep '★' | awk '{print $3}')
 [ -z "$CURRENT_EMAIL" ] && exit 0
 
 SHOULD_ROTATE=$(python3 -c "
