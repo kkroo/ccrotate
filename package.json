@@ -1,9 +1,11 @@
 {
   "name": "ccrotate",
   "version": "1.0.14",
-  "description": "A simple CLI tool to manage and rotate multiple Claude Code accounts, helping you bypass rate limits",
+  "description": "A CLI tool to manage and rotate multiple Claude Code or Codex accounts",
   "keywords": [
     "claude",
+    "codex",
+    "openai",
     "cli",
     "account-management",
     "rate-limit",

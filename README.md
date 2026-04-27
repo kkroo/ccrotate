@@ -1,8 +1,8 @@
 # 🔄 ccrotate
 
-> **Seamlessly rotate between multiple Claude accounts to bypass rate limits**
+> **Seamlessly rotate between multiple Claude Code or Codex accounts**
 
-A powerful CLI tool designed for `claude-code` users who need to manage multiple Claude accounts efficiently. Say goodbye to rate limit frustrations! 🚀
+A powerful CLI tool for managing multiple `claude-code` accounts, with Codex account save/switch support built in. Say goodbye to rate limit frustrations! 🚀
 
 [![npm version](https://badge.fury.io/js/ccrotate.svg)](https://badge.fury.io/js/ccrotate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -20,6 +20,7 @@ A powerful CLI tool designed for `claude-code` users who need to manage multiple
 - 🎨 **Beautiful CLI** - Colorful, intuitive interface with clear feedback
 - ⚡ **Lightning Fast** - Quick account switches without losing context
 - 📦 **Optimized Distribution** - Single executable with minimal runtime dependencies
+- 🤖 **Codex-Aware Runtime Detection** - Auto-detects Claude Code vs Codex from the runtime environment
 
 ## 🚀 Quick Start
 
@@ -35,6 +36,16 @@ npm install -g ccrotate
 2. **Save your account**: `ccrotate snap`
 3. **Login to another account** and repeat step 2
 4. **Start rotating**: `ccrotate next` or `ccrotate switch user@example.com`
+
+## 🤖 Codex Support
+
+When `ccrotate` is launched from Codex, it auto-detects that runtime from `CODEX_*` environment markers or the parent process chain and switches to Codex mode automatically.
+
+- Active auth source: `~/.codex/auth.json`
+- Saved profiles: `~/.ccrotate/profiles.codex.json`
+- Supported commands in Codex mode: `snap`, `list`, `switch`, `next`, `remove`
+- `next` in Codex mode is a simple round-robin switch, not Claude tier detection
+- Claude-only commands still require Claude Code mode: `refresh`, `refresh-one`, `status`, `when`, `repair`, `export`, `import`, `tier-cache`
 
 ## 📖 Commands
 

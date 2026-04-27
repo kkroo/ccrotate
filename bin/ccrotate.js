@@ -10,7 +10,7 @@ const ccrotate = new CCRotate();
 
 program
   .name('ccrotate')
-  .description('A simple CLI tool to manage and rotate multiple Claude Code accounts, helping you bypass rate limits')
+  .description('A CLI tool to manage and rotate multiple Claude Code or Codex accounts')
   .version(version, '-v, --version', 'output the version number');
 
 program
@@ -53,7 +53,7 @@ program
 
 program
   .command('next')
-  .description('Smart-rotate to next standard-tier account')
+  .description('Rotate to the next account (smart tier-aware in Claude Code)')
   .option('-y, --yes', 'Auto-allow extra usage if no standard accounts')
   .option('--deny', 'Never use extra usage, wait for reset instead')
   .option('--wait', 'Switch to earliest-reset account and output reset epoch (for auto-resume)')
@@ -163,6 +163,7 @@ program
   .description('Show cached tier data from last refresh/next (JSON)')
   .action(async () => {
     try {
+      ccrotate.ensureClaudeFeature('tier-cache');
       const cache = ccrotate.loadTierCache();
       if (!cache) {
         console.log(JSON.stringify({ error: 'No cache. Run ccrotate refresh first.' }));
@@ -186,6 +187,7 @@ program
         for (const [k, v] of Object.entries(config)) {
           console.log(chalk.gray(`  ${k}: `) + chalk.white(v));
         }
+        console.log(chalk.gray(`\nDetected target: ${ccrotate.getTargetName()} (${ccrotate.target})`));
         console.log(chalk.gray('\nSettings:'));
         console.log(chalk.gray('  extraUsage: prompt | allow | deny'));
         return;
