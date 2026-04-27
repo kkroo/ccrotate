@@ -67,6 +67,27 @@ program
   });
 
 program
+  .command('launch [target]')
+  .description('Rotate to a fresh account, then exec `claude` or `codex` so the new session reads new auth')
+  .option('--no-rotate', 'Skip rotation, just exec the target binary')
+  .option('--deny', 'During rotation, never auto-accept extra usage')
+  .allowUnknownOption(true)
+  .action(async (target, options, command) => {
+    // Forward any args after `--` (or unknown options) to the launched binary.
+    const passThrough = command.args.slice(target ? 1 : 0);
+    try {
+      await ccrotate.launch(target, {
+        skipRotate: options.rotate === false,
+        deny: !!options.deny,
+        passThrough,
+      });
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
+program
   .command('remove <email>')
   .alias('rm')
   .description('Remove saved account')
