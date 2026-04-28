@@ -96,8 +96,8 @@ pnpm run publish:dist
 - `ccrotate next` - Switch to next account in rotation
 - `ccrotate remove <email>` (alias: `rm`) - Remove saved account
 - `ccrotate refresh` (alias: `rf`) - Test all accounts and refresh tokens
-- `ccrotate export` - Export all profiles as compressed string
-- `ccrotate import <data>` - Import profiles from compressed string
+- `ccrotate export` - Export all profiles for the active target as compressed string
+- `ccrotate import <data>` - Import profiles from compressed string using sync-aware merging
 
 ## File Structure
 
@@ -126,7 +126,9 @@ pnpm run publish:dist
 - The tool maintains compatibility with `claude-code`'s authentication system
 - Error handling provides user-friendly messages for common scenarios
 - Profiles include `lastUsed` timestamp for rotation logic
+- Profiles and tier-cache entries also track `lastApiSyncAt` / `syncedAt` for freshness-based merges
 - Export/import uses MessagePack + Gzip + Base64 for efficient compression
+- Import merges by the latest successful API sync, not import time
 - CRC32 verification ensures data integrity during import
 - Account testing uses actual claude calls to verify token validity
 - Build system creates single executable with external runtime dependencies

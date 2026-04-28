@@ -15,7 +15,7 @@ A powerful CLI tool for managing multiple `claude-code` accounts, with Codex acc
 - 🎯 **Intelligent Switching** - Skips rate-limited and extra-usage accounts automatically
 - 📸 **Snapshot Management** - Save your current Claude session instantly
 - 💾 **Safe Storage** - Atomic file operations prevent data corruption
-- 📦 **Backup & Restore** - Export/import profiles with compression and integrity checking
+- 📦 **Backup & Restore** - Export/import profiles with compression, integrity checking, and sync-aware merging
 - 🔄 **Account Testing** - Verify and refresh tokens automatically
 - 🎨 **Beautiful CLI** - Colorful, intuitive interface with clear feedback
 - ⚡ **Lightning Fast** - Quick account switches without losing context
@@ -45,7 +45,8 @@ When `ccrotate` is launched from Codex, it auto-detects that runtime from `CODEX
 - Saved profiles: `~/.ccrotate/profiles.codex.json`
 - Supported commands in Codex mode: `snap`, `list`, `switch`, `next`, `remove`, `status`, `refresh`, `when`
 - `next` in Codex mode probes saved accounts and picks one with remaining quota
-- Claude-only commands still require Claude Code mode: `refresh-one`, `repair`, `export`, `import`, `tier-cache`
+- Claude-only commands still require Claude Code mode: `refresh-one`, `repair`, `tier-cache`
+- `export` / `import` work in both Claude Code and Codex mode
 
 ## 📖 Commands
 
@@ -109,7 +110,7 @@ ccrotate remove user@example.com
 ```
 
 ### 📤 `ccrotate export`
-Export all saved profiles as a compressed, shell-safe string with CRC verification.
+Export all saved profiles for the active target as a compressed, shell-safe string with CRC verification.
 
 ```bash
 ccrotate export
@@ -122,6 +123,7 @@ ccrotate export
 
 ### 📥 `ccrotate import <data>`
 Import profiles from a compressed string with automatic CRC verification.
+When an account already exists, `ccrotate` keeps the version with the newer successful API sync timestamp (`lastApiSyncAt`), not the newer import time.
 
 ```bash
 ccrotate import "mp-gz-b64:f7dd8ae3:H4sIAAAAAAAAA5XRT..."
