@@ -77,7 +77,7 @@ ccrotate switch user2@example.com
 ```
 
 ### ⏭️ `ccrotate next [--yes] [--deny]`
-Smart-rotate to the next available account. Tests each candidate's usage tier and picks the best option:
+Smart-rotate to the next available account. Automatically saves the current account first, then tests each candidate's usage tier and picks the best option:
 
 1. **Standard tier available** → switches immediately
 2. **Only extra usage available** → prompts (or auto-allows with `--yes`, blocks with `--deny`)
