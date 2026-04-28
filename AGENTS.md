@@ -24,8 +24,8 @@ Profiles are stored separately:
 ## Command Expectations
 
 - Claude Code supports the full command set, including refresh/tier logic.
-- Codex currently supports `snap`, `list`, `switch`, `next`, and `remove`.
-- In Codex mode, `next` is round-robin. Claude-only commands should fail clearly instead of guessing behavior.
+- Codex currently supports `snap`, `list`, `switch`, `next`, `remove`, `status`, `refresh`, and `when`.
+- In Codex mode, `next` probes saved accounts and picks one with remaining quota. Claude-only commands should fail clearly instead of guessing behavior.
 
 ## Development Notes
 
