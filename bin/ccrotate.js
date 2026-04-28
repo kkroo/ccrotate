@@ -59,9 +59,10 @@ program
 program
   .command('switch <email>')
   .description('Switch to specific account')
-  .action(async (email) => {
+  .option('--relaunch', 'After switching, start a fresh session so the new auth is picked up')
+  .action(async (email, options) => {
     try {
-      await ccrotate.switch(email);
+      await ccrotate.switch(email, { relaunch: options.relaunch });
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
@@ -74,9 +75,10 @@ program
   .option('-y, --yes', 'Auto-allow extra usage if no standard accounts')
   .option('--deny', 'Never use extra usage, wait for reset instead')
   .option('--wait', 'Switch to earliest-reset account and output reset epoch (for auto-resume)')
+  .option('--relaunch', 'After switching, start a fresh session so the new auth is picked up')
   .action(async (options) => {
     try {
-      await ccrotate.next({ yes: options.yes, deny: options.deny, wait: options.wait });
+      await ccrotate.next({ yes: options.yes, deny: options.deny, wait: options.wait, relaunch: options.relaunch });
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
@@ -132,7 +134,7 @@ program
 
 program
   .command('when')
-  .description('Show when each account will be available (reads cache only)')
+  .description('Show when each account will be available (refreshes stale cache first)')
   .action(async () => {
     try { await ccrotate.when(); } catch (error) { console.error(chalk.red(`Error: ${error.message}`)); process.exit(1); }
   });
