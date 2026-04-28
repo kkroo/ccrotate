@@ -13,7 +13,22 @@ const ccrotate = new CCRotate();
 program
   .name('ccrotate')
   .description('A CLI tool to manage and rotate multiple Claude Code or Codex accounts')
-  .version(version, '-v, --version', 'output the version number');
+  .version(version, '-v, --version', 'output the version number')
+  .option('--target <target>', "Force target ('claude' or 'codex'); overrides auto-detection and CCROTATE_TARGET");
+
+// Apply --target before any subcommand runs so commands like `switch`/`next`
+// pick up the right profiles and tier-cache files. Without this, a top-level
+// flag would only land after CCRotate has already chosen a target in the constructor.
+program.hook('preAction', (thisCmd) => {
+  const explicit = thisCmd.opts().target;
+  if (!explicit) return;
+  try {
+    ccrotate.setTarget(explicit);
+  } catch (error) {
+    console.error(chalk.red(`Error: ${error.message}`));
+    process.exit(1);
+  }
+});
 
 program
   .command('snap')
