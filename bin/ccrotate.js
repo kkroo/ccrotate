@@ -2,8 +2,10 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+import fs from 'fs';
 import CCRotate from '../lib/ccrotate.js';
-const version = process.env.CCROTATE_VERSION || '1.0.12';
+const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const version = process.env.CCROTATE_VERSION || packageJson.version || '0.0.0';
 
 const program = new Command();
 const ccrotate = new CCRotate();
