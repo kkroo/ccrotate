@@ -1,0 +1,37 @@
+{
+  "name": "@kkroo/paperclip-plugin-ccrotate",
+  "version": "0.1.0",
+  "description": "Paperclip sandbox provider plugin that runs agents through ccrotate-managed Claude/Codex accounts over SSH, with automatic mid-run rotation on rate limits.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "paperclipPlugin": {
+    "manifest": "./dist/manifest.js",
+    "worker": "./dist/worker.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "dependencies": {
+    "@paperclipai/plugin-sdk": "^2026.427.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "typescript": "^5.7.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
