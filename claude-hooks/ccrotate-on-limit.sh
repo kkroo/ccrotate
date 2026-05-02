@@ -139,7 +139,73 @@ except Exception as e:
     pass
 " 2>/dev/null)
 
+# If the cache lookup found nothing usable AND there are accounts with no
+# per-account data (Usage API on cooldown / never probed), do a fresh
+# `ccrotate refresh` to invalidate cooldowns and probe them, then re-run
+# the cache logic. Otherwise unknowns get silently skipped and the hook
+# falls through to "No accounts with reset data available" even when
+# usable accounts exist in the pool.
 ACTION=$(echo "$BEST" | cut -d'|' -f1)
+if [ -z "$ACTION" ]; then
+  HAS_UNKNOWN=$(python3 -c "
+import json
+try:
+    cache = json.load(open('$CACHE'))
+    current = '$CURRENT_EMAIL'
+    for a in cache.get('accounts', []):
+        if a['email'] == current: continue
+        rl = a.get('rateLimits') or {}
+        u5h = rl.get('utilization5h')
+        u7d = rl.get('utilization7d')
+        tier = a.get('serviceTier','')
+        if u5h is None and u7d is None and tier not in ('base','exhausted'):
+            print('1'); break
+except: pass
+" 2>/dev/null)
+  if [ "$HAS_UNKNOWN" = "1" ]; then
+    echo "$(date -Iseconds) Cache READY-pass empty; probing unknowns via ccrotate refresh" >> "$LOG"
+    ccrotate refresh >/dev/null 2>&1 || true
+    BEST=$(python3 -c "
+import json, time, sys
+try:
+    cache = json.load(open('$CACHE'))
+    current = '$CURRENT_EMAIL'
+    now = time.time()
+    for a in cache.get('accounts', []):
+        if a['email'] == current: continue
+        rl = a.get('rateLimits') or {}
+        u5h = rl.get('utilization5h')
+        u7d = rl.get('utilization7d')
+        if u5h is None and u7d is None: continue
+        tier = a.get('serviceTier', '')
+        if tier == 'exhausted': continue
+        if (u5h is not None and u5h >= 95) or (u7d is not None and u7d >= 95): continue
+        print(f'READY|{a[\"email\"]}|{int(now)}'); sys.exit(0)
+    for a in cache.get('accounts', []):
+        if a['email'] == current: continue
+        if a.get('serviceTier', '') == 'base':
+            print(f'READY|{a[\"email\"]}|{int(now)}'); sys.exit(0)
+    best = None
+    for a in cache.get('accounts', []):
+        if a['email'] == current: continue
+        rl = a.get('rateLimits') or {}
+        if rl.get('utilization5h') is None and rl.get('utilization7d') is None: continue
+        for r in sorted([r for r in [rl.get('reset5h'), rl.get('reset7d')] if r]):
+            if not best or r < best[1]:
+                best = (a['email'], r)
+                break
+    if best:
+        email, epoch = best
+        if epoch <= now:
+            print(f'READY|{email}|{int(epoch)}')
+        else:
+            print(f'WAIT|{email}|{int(epoch)}|{int(epoch - now) + 120}')
+except Exception:
+    pass
+" 2>/dev/null)
+    ACTION=$(echo "$BEST" | cut -d'|' -f1)
+  fi
+fi
 TARGET=$(echo "$BEST" | cut -d'|' -f2)
 EPOCH=$(echo "$BEST" | cut -d'|' -f3)
 DELAY=$(echo "$BEST" | cut -d'|' -f4)
