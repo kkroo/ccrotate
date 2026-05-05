@@ -34,9 +34,10 @@ program
   .command('snap')
   .description('Save current account information')
   .option('--force', 'Skip confirmation prompt when overwriting existing account')
+  .option('--email <email>', 'Save under this email instead of ~/.claude.json oauthAccount.emailAddress. Use when a concurrent process may rewrite the active-account files mid-snap (e.g. auth-bot-driven relogin while paperclip-0 runs ccrotate switch).')
   .action(async (options) => {
     try {
-      await ccrotate.snap(options.force);
+      await ccrotate.snap(options.force, options.email || null);
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
