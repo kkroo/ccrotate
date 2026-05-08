@@ -60,9 +60,14 @@ program
   .command('switch <email>')
   .description('Switch to specific account')
   .option('--relaunch', 'After switching, start a fresh session so the new auth is picked up')
+  .option('--no-refresh', "Skip the implicit token refresh on switch: leave the target's credentials untouched even if the access_token is expired. Useful when the operator wants a true read-only pointer flip and doesn't want to risk a refresh_token desync (the most fragile failure mode — single-use refresh tokens that fail to refresh leave the account marked stale).")
   .action(async (email, options) => {
     try {
-      await ccrotate.switch(email, { relaunch: options.relaunch });
+      // commander treats --no-refresh as `options.refresh === false`
+      await ccrotate.switch(email, {
+        relaunch: options.relaunch,
+        noRefresh: options.refresh === false,
+      });
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
