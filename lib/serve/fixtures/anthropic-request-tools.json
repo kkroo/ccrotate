@@ -1,0 +1,17 @@
+{
+  "model": "claude-haiku-4-5-20251001",
+  "max_tokens": 200,
+  "messages": [
+    {"role": "user", "content": "What's the weather in SF?"},
+    {"role": "assistant", "content": [
+      {"type": "tool_use", "id": "call_X", "name": "get_weather", "input": {"city": "SF"}}
+    ]},
+    {"role": "user", "content": [
+      {"type": "tool_result", "tool_use_id": "call_X", "content": "{\"temp\":62,\"unit\":\"F\"}"}
+    ]}
+  ],
+  "tools": [
+    {"name": "get_weather", "description": "Get current weather",
+     "input_schema": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "chatcmpl-msg_TOOL",
+  "object": "chat.completion",
+  "model": "claude-haiku-4-5-20251001",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "Let me check.",
+      "tool_calls": [
+        {"id": "tu_1", "type": "function",
+         "function": {"name": "get_weather", "arguments": "{\"city\":\"SF\"}"}}
+      ]
+    },
+    "finish_reason": "tool_calls"
+  }],
+  "usage": {"prompt_tokens": 25, "completion_tokens": 15, "total_tokens": 40}
+}
