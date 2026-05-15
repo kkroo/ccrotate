@@ -523,6 +523,13 @@ Stub each in `~/src/ccrotate/lib/serve/TODO.md`:
 
 ## Open questions
 
-1. **Codex pool feasibility** (Gate 1) — gates the codex rotation feature on a single probe. Pending.
+1. **OAuth feasibility gates** (Gate 0 + 1) — COMPLETE
+   - **Gate 0 (Claude OAuth)**: PASS — accessed api.anthropic.com successfully with ccrotate accessToken. Received HTTP 429 rate_limit_error (indicates valid auth; account is rate-limited). This proves the OAuth bearer pattern works.
+   - **Gate 1 (Codex pool)**: FAIL — profiles.codex.json exists but all entries have empty credentials (no id_token). This means codex pool is not currently populated. Design defers codex rotation to v2; Task 13 will be skipped. Fallback: single OPENAI_API_KEY env for `/v1/embeddings` and OpenAI calls.
+   
+   Evidence:
+   - Gate 0 response (first 100 chars): `{"type":"error","error":{"type":"rate_limit_error","message":"This request would exceed your account's rate`
+   - Gate 1 response: StopIteration on id_token lookup (no populated codex credentials found)
+
 2. **Image registry credentials** — `registry.blockcast.net` is already configured via `imagePullSecrets: registry-blockcast-net-pull` on the auth-bot Deployment. Inherited by sibling container.
 3. **CI/CD for ccrotate-serve image** — re-use the auth-bot image's GitHub Actions flow (build → push to registry.blockcast.net) or wire a new workflow? Defer to writing-plans.
