@@ -1,7 +1,8 @@
 # ccrotate serve — design
 
 - **Date**: 2026-05-15
-- **Status**: design, pending implementation
+- **Status**: implemented (with follow-ups — see below)
+- **Implemented in**: https://github.com/kkroo/ccrotate/pull/7
 - **Owner**: bot2@blockcast.net
 - **Author**: brainstormed via superpowers:brainstorming in paperclip resume session
 - **Related**:
@@ -533,3 +534,9 @@ Stub each in `~/src/ccrotate/lib/serve/TODO.md`:
 
 2. **Image registry credentials** — `registry.blockcast.net` is already configured via `imagePullSecrets: registry-blockcast-net-pull` on the auth-bot Deployment. Inherited by sibling container.
 3. **CI/CD for ccrotate-serve image** — re-use the auth-bot image's GitHub Actions flow (build → push to registry.blockcast.net) or wire a new workflow? Defer to writing-plans.
+4. **Follow-ups discovered during rollout** (2026-05-15)
+   - **Classifier regex gap**: the production Anthropic 429 message format is "This request would exceed your account's rate ..." but the regex in `classifyQuotaError` (`/usage limit|extra usage exhausted|exceeded your.*quota/i`) doesn't match this string. Result: structural-quota 429s currently get classified as `transient-429` → no rotation, no `markAccountExhausted`. Fix: broaden the regex to also match `exceed your account's rate` or alternatively trigger structural on any 429 when tier-cache shows the active account at 5h:100%.
+   - **LiteLLM fallback chain incomplete**: `claude-sonnet-4-6` requests from Hindsight have no further fallback (current chain is `gpt-* → claude-*` only). When `claude-sonnet-4-6` 429s, LiteLLM propagates the error rather than falling through to `claude-haiku-4-5-20251001`. Add a `claude-sonnet-4-6 → claude-haiku-4-5-20251001` fallback rule.
+   - **Per-agent bank re-consolidation**: the 5 per-agent banks have `total_nodes=0` because their consolidation ops were marked `completed` with empty `result_metadata` BEFORE the working LLM path landed. They need a re-consolidation trigger — but `POST /v1/default/banks/{id}/reconsolidate` returns 404 in hindsight-api 0.6.1. Options: (a) check for a different re-trigger endpoint, (b) re-POST the source docs, (c) wait for natural re-consolidation when new docs land.
+   - **current.json coordination gap**: ccrotate-serve introduces a new active-account pointer file (`current.json`) that the existing ccrotate CLI tools (used by the bot container) don't read. This means a `ccrotate switch` on devbox or in the bot container doesn't affect what account the sidecar uses, and vice versa. For now this is fine since the sidecar is the only writer in the cluster; flag for v2 hardening.
+   - **Wiring proven**: a direct probe (`PONG` test from `hindsight` namespace through LiteLLM → ccrotate-serve → api.anthropic.com) returned a valid `claude-haiku-4-5-20251001` chat-completion. After clearing the stale worker lock, hindsight-api's worker claimed and started processing the 7,453 unconsolidated `agent-memories` documents through the new path.
