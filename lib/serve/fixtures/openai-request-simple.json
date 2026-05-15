@@ -1,0 +1,11 @@
+{
+  "model": "claude-haiku-4-5-20251001",
+  "messages": [
+    {"role": "system", "content": "You are concise."},
+    {"role": "user", "content": "Hello"}
+  ],
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "stop": ["END"],
+  "max_tokens": 256
+}
