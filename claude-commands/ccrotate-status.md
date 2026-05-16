@@ -1,5 +1,14 @@
 Show Claude Code account summary with usage tiers and reset timers.
 
+Cloud/devbox mode:
+If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, source the env file if needed and use ccrotate-serve instead of local `ccrotate`:
+1. Run `curl -sS http://127.0.0.1:4001/healthz`.
+2. Run `curl -sS -H "Authorization: Bearer $CCROTATE_SERVE_TOKEN" "$CCROTATE_SERVE_BASE_URL/models"`.
+3. Optionally make a tiny `/v1/responses` request only if the user asks for an end-to-end probe; a 429 means the served pool is exhausted, not that routing is broken.
+
+Do not run `ccrotate list`, `ccrotate tier-cache`, `ccrotate refresh`, `ccrotate status`, `ccrotate next`, or scheduling tasks in cloud mode. Local cache can be stale and is not authoritative for the served pool.
+
+Local mode only:
 Steps:
 1. Run `ccrotate list` to get the account list and identify the current (starred) account.
 2. Run `ccrotate tier-cache` to get cached tier data from the last refresh.

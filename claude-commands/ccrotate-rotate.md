@@ -1,5 +1,9 @@
 Smart-rotate to the next Claude Code account on base usage tier using cached data (zero API calls).
 
+Cloud/devbox mode:
+If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, do not run local `ccrotate next` or `ccrotate switch`. Cloud rotation happens inside ccrotate-serve/auth-bot. Source the env file if needed, verify `curl -sS http://127.0.0.1:4001/healthz`, and tell the user to retry their Claude/Codex request through ccrotate-serve. If it still returns 429, report that the served pool is exhausted.
+
+Local mode only:
 Steps:
 1. Run `ccrotate tier-cache` to read cached usage data
 2. Find the first account with `serviceTier: "base"` that is NOT the current account
