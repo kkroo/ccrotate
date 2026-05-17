@@ -1,4 +1,6 @@
-# /ccrotate-snap
+---
+description: Capture local ccrotate credentials, or explain cloud capture ownership in ccrotate-serve mode.
+---
 
 Save the current Claude Code account credentials for rotation.
 

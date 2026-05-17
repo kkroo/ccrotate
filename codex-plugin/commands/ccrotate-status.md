@@ -1,4 +1,6 @@
-# /ccrotate-status
+---
+description: Show ccrotate pool status using ccrotate-serve cloud mode when configured.
+---
 
 Show Claude Code account summary with usage tiers and reset timers.
 

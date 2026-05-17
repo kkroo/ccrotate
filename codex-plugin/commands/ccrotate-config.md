@@ -1,4 +1,6 @@
-# /ccrotate-config
+---
+description: Show ccrotate local or ccrotate-serve cloud endpoint configuration.
+---
 
 Show or update ccrotate configuration.
 

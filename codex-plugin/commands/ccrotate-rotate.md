@@ -1,4 +1,6 @@
-# /ccrotate-rotate
+---
+description: Rotate or verify ccrotate routing depending on local versus ccrotate-serve cloud mode.
+---
 
 Smart-rotate to the next Claude Code account on base usage tier using cached data (zero API calls).
 

@@ -1,4 +1,6 @@
-# /ccrotate-accounts
+---
+description: Show ccrotate account pool health through ccrotate-serve cloud mode or local cache.
+---
 
 Quick ccrotate account overview.
 

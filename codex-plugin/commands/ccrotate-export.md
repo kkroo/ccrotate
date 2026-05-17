@@ -1,4 +1,6 @@
-# /ccrotate-export
+---
+description: Export local ccrotate profiles, or explain cloud export ownership in ccrotate-serve mode.
+---
 
 Export all Claude Code account profiles as a compressed string for transfer to another machine.
 
