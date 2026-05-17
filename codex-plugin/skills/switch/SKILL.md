@@ -1,5 +1,5 @@
 ---
-name: ccrotate-switch
+name: switch
 description: Switch local ccrotate accounts, or explain cloud routing behavior in ccrotate-serve mode.
 ---
 

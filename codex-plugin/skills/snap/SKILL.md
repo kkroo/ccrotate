@@ -1,5 +1,5 @@
 ---
-name: ccrotate-snap
+name: snap
 description: Capture local ccrotate credentials, or explain cloud capture ownership in ccrotate-serve mode.
 ---
 

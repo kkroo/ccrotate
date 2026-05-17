@@ -1,4 +1,5 @@
 ---
+name: rotate
 description: Rotate or verify ccrotate routing depending on local versus ccrotate-serve cloud mode.
 ---
 

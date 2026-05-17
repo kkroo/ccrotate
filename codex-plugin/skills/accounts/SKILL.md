@@ -1,5 +1,5 @@
 ---
-name: ccrotate-accounts
+name: accounts
 description: Show ccrotate account pool health through ccrotate-serve cloud mode or local cache.
 ---
 

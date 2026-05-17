@@ -1,8 +1,10 @@
 ---
-description: Show ccrotate pool status using ccrotate-serve cloud mode when configured.
+description: Show ccrotate pool status with `ccrotate when` semantics, using ccrotate-serve cloud mode when configured.
 ---
 
-Show Claude Code account summary with usage tiers and reset timers.
+# /ccrotate-when
+
+Show the ccrotate account pool summary with usage tiers and reset timers.
 
 Cloud/devbox mode:
 If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, source the env file if needed and use ccrotate-serve instead of local `ccrotate`:

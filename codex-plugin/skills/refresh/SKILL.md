@@ -1,5 +1,5 @@
 ---
-name: ccrotate-refresh
+name: refresh
 description: Refresh or verify ccrotate account usage depending on local versus ccrotate-serve cloud mode.
 ---
 

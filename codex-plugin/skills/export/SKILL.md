@@ -1,5 +1,5 @@
 ---
-name: ccrotate-export
+name: export
 description: Export local ccrotate profiles, or explain cloud export ownership in ccrotate-serve mode.
 ---
 

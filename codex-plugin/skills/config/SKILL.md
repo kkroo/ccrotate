@@ -1,4 +1,5 @@
 ---
+name: config
 description: Show ccrotate local or ccrotate-serve cloud endpoint configuration.
 ---
 
