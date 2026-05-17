@@ -1,7 +1,7 @@
 {
   "name": "ccrotate",
-  "version": "0.1.2",
-  "description": "Slash commands for inspecting and operating ccrotate through local or ccrotate-serve cloud mode.",
+  "version": "0.1.3",
+  "description": "Skills for inspecting and operating ccrotate through local or ccrotate-serve cloud mode.",
   "author": {
     "name": "kkroo",
     "url": "https://github.com/kkroo/ccrotate"
@@ -13,7 +13,7 @@
   "interface": {
     "displayName": "ccrotate",
     "shortDescription": "Manage Claude and Codex account-pool status via ccrotate or ccrotate-serve.",
-    "longDescription": "Provides /ccrotate-* commands that use ccrotate-serve in cloud/devbox mode and avoid mutating stale local account state. Local mode still supports direct ccrotate CLI operations.",
+    "longDescription": "Provides ccrotate skills that use ccrotate-serve in cloud/devbox mode and avoid mutating stale local account state. Local mode still supports direct ccrotate CLI operations.",
     "developerName": "kkroo",
     "category": "Developer Tools",
     "capabilities": ["Interactive", "Read"],
