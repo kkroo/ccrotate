@@ -1,5 +1,23 @@
-Show Claude Code account summary with usage tiers and reset timers.
+---
+description: Show ccrotate pool status with `ccrotate when` semantics, using ccrotate-serve cloud mode when configured.
+---
 
+# /ccrotate-when
+
+Show the ccrotate account pool summary with usage tiers and reset timers.
+
+Cloud/devbox mode:
+If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, source the env file if needed and use ccrotate-serve instead of local `ccrotate`:
+1. Run `curl -sS http://127.0.0.1:4001/healthz`.
+2. Run `curl -sS -H "Authorization: Bearer $CCROTATE_SERVE_TOKEN" "$CCROTATE_SERVE_BASE_URL/models"`.
+3. Optionally make a tiny end-to-end request only if the user asks for a probe:
+   - Claude/Anthropic wiring: use `$CCROTATE_SERVE_ANTHROPIC_BASE_URL/v1/messages`.
+   - Codex/OpenAI wiring: use `$CCROTATE_SERVE_BASE_URL/responses`.
+   - A 429 means the served pool is exhausted, not that routing is broken.
+
+Do not run `ccrotate list`, `ccrotate tier-cache`, `ccrotate refresh`, `ccrotate status`, `ccrotate next`, or scheduling tasks in cloud mode. Local cache can be stale and is not authoritative for the served pool.
+
+Local mode only:
 Steps:
 1. Run `ccrotate list` to get the account list and identify the current (starred) account.
 2. Run `ccrotate tier-cache` to get cached tier data from the last refresh.

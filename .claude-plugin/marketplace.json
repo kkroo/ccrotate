@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "oramadan-local",
+  "description": "Local Claude Code plugins from this devbox.",
+  "owner": {
+    "name": "oramadan"
+  },
+  "plugins": [
+    {
+      "name": "ccrotate",
+      "version": "0.1.2",
+      "description": "Slash commands for inspecting and operating ccrotate through local or ccrotate-serve cloud mode, centered on ccrotate when.",
+      "author": {
+        "name": "kkroo"
+      },
+      "category": "development",
+      "source": "./claude-plugin",
+      "homepage": "https://github.com/kkroo/ccrotate"
+    }
+  ]
+}

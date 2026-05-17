@@ -1,0 +1,26 @@
+{
+  "name": "ccrotate",
+  "version": "0.1.4",
+  "description": "Skills for inspecting and operating ccrotate through local or ccrotate-serve cloud mode.",
+  "author": {
+    "name": "kkroo",
+    "url": "https://github.com/kkroo/ccrotate"
+  },
+  "homepage": "https://github.com/kkroo/ccrotate",
+  "repository": "https://github.com/kkroo/ccrotate",
+  "license": "MIT",
+  "keywords": ["ccrotate", "claude", "codex", "account-rotation"],
+  "interface": {
+    "displayName": "ccrotate",
+    "shortDescription": "Manage Claude and Codex account-pool status via ccrotate or ccrotate-serve.",
+    "longDescription": "Provides namespaced ccrotate skills such as ccrotate:when and ccrotate:config. In cloud/devbox mode they use ccrotate-serve and avoid mutating stale local account state. Local mode still supports direct ccrotate CLI operations.",
+    "developerName": "kkroo",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Read"],
+    "defaultPrompt": [
+      "Use ccrotate:when",
+      "Check ccrotate models",
+      "Explain ccrotate cloud config"
+    ]
+  }
+}

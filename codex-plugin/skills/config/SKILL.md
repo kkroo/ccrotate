@@ -1,8 +1,7 @@
 ---
-description: Inspect ccrotate configuration and ccrotate-serve wiring without printing secrets.
+name: config
+description: Show ccrotate local or ccrotate-serve cloud endpoint configuration.
 ---
-
-# /ccrotate-config
 
 Show or update ccrotate configuration.
 

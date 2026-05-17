@@ -1,8 +1,7 @@
 ---
-description: Refresh or inspect ccrotate usage data, avoiding local refresh in cloud mode.
+name: refresh
+description: Refresh or verify ccrotate account usage depending on local versus ccrotate-serve cloud mode.
 ---
-
-# /ccrotate-refresh
 
 Refresh Claude Code account usage data.
 

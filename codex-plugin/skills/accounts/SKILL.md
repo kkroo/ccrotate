@@ -1,8 +1,7 @@
 ---
-description: Show ccrotate account pool details using ccrotate-serve cloud mode when configured.
+name: accounts
+description: Show ccrotate account pool health through ccrotate-serve cloud mode or local cache.
 ---
-
-# /ccrotate-accounts
 
 Quick ccrotate account overview.
 

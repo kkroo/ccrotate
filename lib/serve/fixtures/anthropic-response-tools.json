@@ -1,0 +1,12 @@
+{
+  "id": "msg_TOOL",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-4-5-20251001",
+  "content": [
+    {"type": "text", "text": "Let me check."},
+    {"type": "tool_use", "id": "tu_1", "name": "get_weather", "input": {"city": "SF"}}
+  ],
+  "stop_reason": "tool_use",
+  "usage": {"input_tokens": 25, "output_tokens": 15}
+}

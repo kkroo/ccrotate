@@ -254,6 +254,20 @@ program
     }
   });
 
+program
+  .command('serve')
+  .description('Run HTTP server exposing /v1/messages and /v1/chat/completions over the OAuth pool')
+  .option('--port <port>', 'TCP port to bind', '4001')
+  .option('--bind <host>', 'address to bind', '0.0.0.0')
+  .action(async (options) => {
+    try {
+      await ccrotate.serve(options);
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
 program.parse();
 
 if (!process.argv.slice(2).length) {

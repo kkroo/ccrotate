@@ -1,0 +1,9 @@
+{
+  "name": "ccrotate",
+  "version": "0.1.2",
+  "description": "Slash commands for inspecting and operating ccrotate through local or ccrotate-serve cloud mode, centered on ccrotate when.",
+  "author": {
+    "name": "kkroo"
+  },
+  "homepage": "https://github.com/kkroo/ccrotate"
+}

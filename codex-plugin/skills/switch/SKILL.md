@@ -1,8 +1,7 @@
 ---
-description: Switch ccrotate accounts through the correct local or serve path.
+name: switch
+description: Switch local ccrotate accounts, or explain cloud routing behavior in ccrotate-serve mode.
 ---
-
-# /ccrotate-switch
 
 Switch to a specific Claude Code account by email.
 

@@ -1,8 +1,7 @@
 ---
-description: Snapshot the current Claude or Codex account into ccrotate.
+name: snap
+description: Capture local ccrotate credentials, or explain cloud capture ownership in ccrotate-serve mode.
 ---
-
-# /ccrotate-snap
 
 Save the current Claude Code account credentials for rotation.
 
