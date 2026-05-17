@@ -13,6 +13,9 @@ COPY --from=build /src/dist /app
 COPY --from=build /src/node_modules /app/node_modules
 # esbuild bundles import.meta.url → file:///app/cli.js; ../package.json resolves to /package.json
 RUN ln -s /app/package.json /package.json
+RUN npm install -g --ignore-scripts @openai/codex@0.130.0 \
+ && command -v codex \
+ && codex --version
 USER node
 EXPOSE 4001
-ENTRYPOINT ["/bin/sh", "-lc", "npm_config_prefix=/tmp/codex npm_config_cache=/tmp/npm-cache npm install -g --ignore-scripts @openai/codex@0.130.0 >/tmp/codex-install.log 2>&1 && export PATH=/tmp/codex/bin:$PATH && exec node /app/cli.js serve \"$@\"", "--"]
+ENTRYPOINT ["node", "/app/cli.js", "serve"]
