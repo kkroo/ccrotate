@@ -1,3 +1,5 @@
+# /ccrotate-switch
+
 Switch to a specific Claude Code account by email.
 
 Cloud/devbox mode:

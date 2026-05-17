@@ -1,3 +1,5 @@
+# /ccrotate-rotate
+
 Smart-rotate to the next Claude Code account on base usage tier using cached data (zero API calls).
 
 Cloud/devbox mode:

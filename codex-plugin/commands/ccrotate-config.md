@@ -1,3 +1,5 @@
+# /ccrotate-config
+
 Show or update ccrotate configuration.
 
 Cloud/devbox mode:

@@ -1,3 +1,5 @@
+# /ccrotate-export
+
 Export all Claude Code account profiles as a compressed string for transfer to another machine.
 
 Cloud/devbox mode:

@@ -1,3 +1,5 @@
+# /ccrotate-accounts
+
 Quick ccrotate account overview.
 
 Cloud/devbox mode:

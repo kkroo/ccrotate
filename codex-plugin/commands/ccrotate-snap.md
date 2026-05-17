@@ -1,3 +1,5 @@
+# /ccrotate-snap
+
 Save the current Claude Code account credentials for rotation.
 
 Cloud/devbox mode:

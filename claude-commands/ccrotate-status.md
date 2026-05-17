@@ -1,3 +1,5 @@
+# /ccrotate-status
+
 Show Claude Code account summary with usage tiers and reset timers.
 
 Cloud/devbox mode:

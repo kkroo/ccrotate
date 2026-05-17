@@ -1,3 +1,5 @@
+# /ccrotate-refresh
+
 Refresh Claude Code account usage data.
 
 Cloud/devbox mode:
