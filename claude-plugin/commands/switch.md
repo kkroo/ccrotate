@@ -2,7 +2,7 @@
 description: Switch ccrotate accounts through the correct local or serve path.
 ---
 
-# /ccrotate-switch
+# /ccrotate:switch
 
 Switch to a specific Claude Code account by email.
 

@@ -2,7 +2,7 @@
 description: Show ccrotate pool status with `ccrotate when` semantics, using ccrotate-serve cloud mode when configured.
 ---
 
-# /ccrotate-when
+# /ccrotate:when
 
 Show the ccrotate account pool summary with usage tiers and reset timers.
 

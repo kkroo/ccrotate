@@ -2,7 +2,7 @@
 description: Snapshot the current Claude or Codex account into ccrotate.
 ---
 
-# /ccrotate-snap
+# /ccrotate:snap
 
 Save the current Claude Code account credentials for rotation.
 

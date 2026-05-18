@@ -2,7 +2,7 @@
 description: Rotate to the next usable ccrotate account through the correct local or serve path.
 ---
 
-# /ccrotate-rotate
+# /ccrotate:rotate
 
 Smart-rotate to the next Claude Code account on base usage tier using cached data (zero API calls).
 

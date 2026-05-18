@@ -2,7 +2,7 @@
 description: Refresh or inspect ccrotate usage data, avoiding local refresh in cloud mode.
 ---
 
-# /ccrotate-refresh
+# /ccrotate:refresh
 
 Refresh Claude Code account usage data.
 
