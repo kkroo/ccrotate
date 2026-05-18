@@ -42,8 +42,9 @@ const baseConfig = {
             }
           });
           
-          // Copy claude-commands/ and scripts/ dirs
-          for (const dir of ['claude-commands', 'claude-hooks', 'scripts']) {
+          // Copy claude-hooks/ and scripts/ dirs (claude-commands/ removed —
+          // slash commands now ship via claude-plugin/ only).
+          for (const dir of ['claude-hooks', 'scripts']) {
             if (fs.existsSync(dir)) {
               const destDir = path.join('dist', dir);
               fs.mkdirSync(destDir, { recursive: true });

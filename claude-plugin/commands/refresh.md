@@ -2,7 +2,7 @@
 description: Refresh or inspect ccrotate usage data, avoiding local refresh in cloud mode.
 ---
 
-# /ccrotate-refresh
+# /ccrotate:refresh
 
 Refresh Claude Code account usage data.
 
@@ -17,7 +17,7 @@ Local mode only:
 For a full refresh of all accounts:
   Run `ccrotate refresh` — makes per-account API calls (GET, no tokens consumed).
   After completion, run `ccrotate tier-cache` and `date -u +%s`, then present a summary table
-  with the same format as /ccrotate-status (including 5h/7d reset time columns — see that skill for format details).
+  with the same format as /ccrotate:when (including 5h/7d reset time columns — see that skill for format details).
 
 For a single stale account (cron-friendly):
   Run `ccrotate refresh-one` — refreshes one account with the stalest data.

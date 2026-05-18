@@ -2,7 +2,7 @@
 description: Inspect ccrotate configuration and ccrotate-serve wiring without printing secrets.
 ---
 
-# /ccrotate-config
+# /ccrotate:config
 
 Show or update ccrotate configuration.
 
