@@ -8,23 +8,11 @@ const home = os.homedir();
 const claudeDir = path.join(home, '.claude');
 const baseDir = path.join(path.dirname(new URL(import.meta.url).pathname), '..');
 
-// 1. Slash commands → ~/.claude/commands/
-const commandsSrc = path.join(baseDir, 'claude-commands');
-const commandsDest = path.join(claudeDir, 'commands');
-if (fs.existsSync(commandsSrc)) {
-  try {
-    fs.mkdirSync(commandsDest, { recursive: true });
-    for (const file of fs.readdirSync(commandsSrc).filter(f => f.endsWith('.md'))) {
-      const dest = path.join(commandsDest, file);
-      if (!fs.existsSync(dest)) {
-        fs.copyFileSync(path.join(commandsSrc, file), dest);
-        console.log(`  ✓ Installed /ccrotate ${file.replace('.md', '').replace('ccrotate-', '')}`);
-      }
-    }
-  } catch (e) {
-    console.log(`  Note: Could not install slash commands: ${e.message}`);
-  }
-}
+// 1. Slash commands are now distributed exclusively via the Claude Code
+//    plugin at claude-plugin/commands/ (loaded under the `/ccrotate:` namespace
+//    by Claude Code's marketplace system). The legacy `claude-commands/`
+//    install path produced long-named commands like `/ccrotate:ccrotate-when`
+//    that duplicated the plugin surface — removed.
 
 // 2. Hooks → ~/.claude/hooks/
 const hooksSrc = path.join(baseDir, 'claude-hooks');
