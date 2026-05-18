@@ -4,7 +4,15 @@ description: Inspect ccrotate configuration and ccrotate-serve wiring without pr
 
 # /ccrotate:config
 
+<!-- ccrotate-serve:cmd=config -->
+
 Show or update ccrotate configuration.
+
+## How this command works
+
+If routed through ccrotate-serve, the server intercepts the marker and shows
+the served pool's view of config (env wiring + extraUsage policy). Local
+execution only happens when no ccrotate-serve is in the path.
 
 Cloud/devbox mode:
 If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, source the env file if needed and show the ccrotate-serve endpoint configuration from environment:

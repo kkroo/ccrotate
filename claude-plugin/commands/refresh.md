@@ -4,7 +4,15 @@ description: Refresh or inspect ccrotate usage data, avoiding local refresh in c
 
 # /ccrotate:refresh
 
+<!-- ccrotate-serve:cmd=refresh -->
+
 Refresh Claude Code account usage data.
+
+## How this command works
+
+If routed through ccrotate-serve, the server intercepts the marker and
+reports current pool freshness (cluster auth-bot owns refresh in cloud mode).
+Local execution only happens when no ccrotate-serve is in the path.
 
 Cloud/devbox mode:
 If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, do not run local `ccrotate refresh` or `ccrotate refresh-one`. The cluster auth bot owns refresh for the cloud pool. Source the env file if needed, then verify:
