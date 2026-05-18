@@ -6,36 +6,80 @@ description: Show ccrotate pool status with `ccrotate when` semantics, using ccr
 
 Show the ccrotate account pool summary with usage tiers and reset timers.
 
-Cloud/devbox mode:
-If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, source the env file if needed and use ccrotate-serve instead of local `ccrotate`:
-1. Run `curl -sS http://127.0.0.1:4001/healthz`.
-2. Run `curl -sS -H "Authorization: Bearer $CCROTATE_SERVE_TOKEN" "$CCROTATE_SERVE_BASE_URL/models"`.
-3. Optionally make a tiny end-to-end request only if the user asks for a probe:
-   - Claude/Anthropic wiring: use `$CCROTATE_SERVE_ANTHROPIC_BASE_URL/v1/messages`.
-   - Codex/OpenAI wiring: use `$CCROTATE_SERVE_BASE_URL/responses`.
-   - A 429 means the served pool is exhausted, not that routing is broken.
+## Cloud / devbox mode
 
-Do not run `ccrotate list`, `ccrotate tier-cache`, `ccrotate refresh`, `ccrotate status`, `ccrotate next`, or scheduling tasks in cloud mode. Local cache can be stale and is not authoritative for the served pool.
+If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set,
+treat ccrotate-serve as the authoritative router and treat `~/.ccrotate/`
+as a read-only mirror (refreshed by `*/5 sync-from-cluster.sh` cron). Do **not**
+run `ccrotate refresh`, `ccrotate refresh-one`, `ccrotate snap`, `ccrotate next`,
+`ccrotate switch`, `ccrotate status`, or `ccrotate import` here — those mutate
+profiles and break cluster sync. Read-only commands (`ccrotate when`,
+`ccrotate list`, `ccrotate tier-cache`) are safe.
 
-Local mode only:
 Steps:
-1. Run `ccrotate list` to get the account list and identify the current (starred) account.
-2. Run `ccrotate tier-cache` to get cached tier data from the last refresh.
-3. Run `ccrotate config` to show the extraUsage policy.
-4. Run `date -u +%s` to get the current unix timestamp.
 
-Present a summary table combining all data. REQUIRED columns:
-- Email, Active (★ if current), Tier, 5h%, 5h resets, 7d%, 7d resets, Extra $
+1. Source the env file if `CCROTATE_SERVE_BASE_URL` is unset:
+   `source "$HOME/.config/ccrotate-serve/env"`.
+2. Probe routing:
+   - `curl -sS http://127.0.0.1:4001/healthz`
+   - `curl -sS -H "Authorization: Bearer $CCROTATE_SERVE_TOKEN" "$CCROTATE_SERVE_BASE_URL/models"`
+3. Render the Claude pool:
+   `CCROTATE_TARGET=claude ccrotate when`
+4. Render the Codex pool:
+   `CCROTATE_TARGET=codex ccrotate when`
+5. Run `date -u +%s` only if you need to convert raw epoch values from
+   `~/.ccrotate/tier-cache.json` — the CLI already prints human reset times.
 
-REQUIRED — Reset time columns:
-For each account with `reset5h` and `reset7d` values, compute the time relative to now:
-- If reset timestamp > now: show "in Xh Ym" and the absolute time, e.g. "in 1h3m (10:00 UTC)"
-- If reset timestamp < now: show "Xh Ym ago" e.g. "2h ago"
-- If reset timestamp is in the past BUT utilization shows 100%: mark as "(stale!)" — the cache is outdated for that account
-- For accounts with null reset values (e.g. org accounts): show "—"
+Present both pool listings verbatim. The CLI already renders the reset-time
+column (`in 2h33m`, `exhausted`, `stale (needs /login + snap)`); don't
+re-derive from raw JSON.
 
-IMPORTANT:
-- Do NOT run `ccrotate refresh`, `ccrotate status`, or `ccrotate next` — these spawn `claude -p` which conflicts with the active Claude Code session and will timeout/lock.
-- Only read cached data via `ccrotate tier-cache` and `ccrotate list`.
-- If tier-cache is missing or stale (>1 hour old based on `updatedAt`), tell the user to run `! ccrotate refresh` from the terminal prompt (the `!` prefix runs it outside Claude Code's process lock).
-- The cache is populated by running `ccrotate refresh` or `ccrotate next` from OUTSIDE an active session (terminal, hooks, or `!` prefix).
+Optional end-to-end probe (only if the user explicitly asks):
+
+- Anthropic wiring: POST to `$CCROTATE_SERVE_ANTHROPIC_BASE_URL/v1/messages`
+- OpenAI wiring: POST to `$CCROTATE_SERVE_BASE_URL/responses`
+- A `429` means the served pool is exhausted, not that routing is broken.
+
+## Local mode (no ccrotate-serve)
+
+Steps:
+
+1. `ccrotate list` — accounts and current (starred) account.
+2. `ccrotate tier-cache` — cached tier data from the last refresh.
+3. `ccrotate config` — extraUsage policy.
+4. `date -u +%s` — current unix timestamp.
+
+Present a summary table with these columns:
+Email · Active (★ if current) · Tier · 5h% · 5h resets · 7d% · 7d resets · Extra $
+
+Reset time formatting:
+
+- `reset5h` / `reset7d` > now: show `in Xh Ym` and absolute, e.g. `in 1h3m (10:00 UTC)`
+- `reset5h` / `reset7d` < now: show `Xh Ym ago`, e.g. `2h ago`
+- past timestamp but utilization shows 100%: append `(stale!)` — cache is outdated
+- null reset (org accounts): show `—`
+
+## When the model pool is fully 429ing
+
+This slash command itself requires a model call to render the response —
+when every account is `429`, the slash command will hang or fail before any
+shell step runs. In that case, drop to a bang-prefix invocation that bypasses
+Claude entirely:
+
+- `!CCROTATE_TARGET=claude ccrotate when` (pure shell, no model)
+- `!CCROTATE_TARGET=codex ccrotate when`
+- `!curl -sS http://127.0.0.1:4001/healthz`
+
+These read `~/.ccrotate/tier-cache.json` (5-min cron mirror of cluster state)
+and print the table directly to the terminal. No tokens consumed.
+
+## Don't
+
+- Don't run `ccrotate refresh`, `ccrotate refresh-one`, or `ccrotate snap` in
+  cloud mode — they rotate single-use refresh_tokens and break cluster sync.
+- Don't run `ccrotate next` or `ccrotate status` from inside an active Claude
+  session — they spawn `claude -p` and deadlock on the session's process lock.
+  Use the `!` bang prefix from the terminal prompt instead.
+- Don't trust `~/.ccrotate/tier-cache.json` if its `updatedAt` is older than
+  ~10 minutes — the `*/5` cron may be stuck. Check
+  `~/.ccrotate/sync-from-cluster.log` and the underlying port-forward.

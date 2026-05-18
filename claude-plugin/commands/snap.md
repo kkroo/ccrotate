@@ -4,10 +4,27 @@ description: Snapshot the current Claude or Codex account into ccrotate.
 
 # /ccrotate:snap
 
-Save the current Claude Code account credentials for rotation.
+<!-- ccrotate-serve:cmd=snap -->
 
-Cloud/devbox mode:
-If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, do not run local `ccrotate snap`. Cloud account capture is owned by the cluster auth bot. Report that snapping must be done through the auth-bot/cloud workflow.
+Capture the currently-logged-in Claude or Codex account into the ccrotate
+pool.
 
-Local mode only:
-Run `ccrotate snap --force` to save without prompting. On macOS this reads from Keychain if the credentials file doesn't exist.
+## How this command works
+
+ccrotate-serve cannot snap on behalf of a client — the credentials it needs
+live on the user's machine (in `~/.claude.json` or the Codex equivalent), not
+in the server's memory. So the marker triggers an informational response that
+tells the user to run snap locally.
+
+For a local snap (bang prefix bypasses the model entirely):
+
+- `!ccrotate snap` — capture currently active account
+- `!ccrotate snap --force` — overwrite existing profile
+
+On macOS this reads from Keychain if the credentials file doesn't exist.
+
+## Cluster snap path
+
+For pool-managed accounts, snapping is handled by the cluster auth-bot's
+`/reloginViaSession` recovery hook — operators don't run `ccrotate snap`
+against the cluster pool directly.

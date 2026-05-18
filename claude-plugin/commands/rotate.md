@@ -4,21 +4,27 @@ description: Rotate to the next usable ccrotate account through the correct loca
 
 # /ccrotate:rotate
 
-Smart-rotate to the next Claude Code account on base usage tier using cached data (zero API calls).
+<!-- ccrotate-serve:cmd=next args=$ARGUMENTS -->
 
-Cloud/devbox mode:
-If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, do not run local `ccrotate next` or `ccrotate switch`. Cloud rotation happens inside ccrotate-serve/auth-bot. Source the env file if needed, verify `curl -sS http://127.0.0.1:4001/healthz`, and tell the user to retry their Claude/Codex request through ccrotate-serve. If it still returns 429, report that the served pool is exhausted.
+Rotate to the next Claude or Codex account. Optionally pass `claude` or
+`codex` to target a specific pool.
 
-Local mode only:
-Steps:
-1. Run `ccrotate tier-cache` to read cached usage data
-2. Find the first account with `serviceTier: "base"` that is NOT the current account
-3. If found, run `ccrotate switch <email>` to switch (picked up automatically, no restart)
-4. If no base accounts in cache, run `ccrotate next --wait` to switch to earliest-reset account and output the reset epoch
-5. If `--wait` outputs JSON with `resetEpoch`, compute `delaySeconds = resetEpoch - now + 120` and use ScheduleWakeup
+## How this command works
 
-IMPORTANT:
-- Do NOT run `ccrotate next` without `--wait` — it makes API calls that burn tokens
-- Do NOT run `ccrotate refresh` — use cached data only
-- `ccrotate switch` updates credentials on disk; the running session picks them up automatically (no restart needed)
-- If tier-cache is empty or very stale (>2hrs), run `ccrotate refresh-one` first (one API call, no tokens consumed)
+ccrotate-serve intercepts the marker and calls its own `next()` directly,
+bypassing the model. The new active account is reported back.
+
+## Local mode (no ccrotate-serve)
+
+1. `ccrotate tier-cache` — read cached usage data.
+2. Find the first account with `serviceTier: "base"` that is NOT current.
+3. If found, `ccrotate switch <email>`.
+4. If none, `ccrotate next --wait` and use the `resetEpoch` to schedule a
+   wake-up via `delaySeconds = resetEpoch - now + 120`.
+
+## Don't
+
+- Don't run `ccrotate next` without `--wait` — burns tokens.
+- Don't run `ccrotate refresh` — use cached data only.
+- If tier-cache is empty or >2h stale, run `ccrotate refresh-one` first
+  (one API call, zero tokens consumed).

@@ -4,12 +4,19 @@ description: Switch ccrotate accounts through the correct local or serve path.
 
 # /ccrotate:switch
 
-Switch to a specific Claude Code account by email.
+<!-- ccrotate-serve:cmd=switch args=$ARGUMENTS -->
 
-Cloud/devbox mode:
-If `$HOME/.config/ccrotate-serve/env` exists or `CCROTATE_SERVE_BASE_URL` is set, do not run local `ccrotate switch`. Cloud requests are routed by ccrotate-serve/auth-bot; switching local credentials does not change the served pool. Report that per-account switching is not exposed by ccrotate-serve yet.
+Switch to a specific account by email. Pass the email as the argument:
+`/ccrotate:switch user@example.com`.
 
-Local mode only:
-Ask the user which account to switch to if not specified. Run `ccrotate list` to show available accounts, then run `ccrotate switch <email>`.
+## How this command works
 
-Remind the user to restart Claude Code after switching.
+ccrotate-serve intercepts the marker, validates the email, and calls
+`switch(email)` on the in-process pool. Confirmation is returned without a
+model call.
+
+## Local mode (no ccrotate-serve)
+
+If the user didn't specify, run `ccrotate list` to show options, then
+`ccrotate switch <email>`. Remind the user that the running session picks up
+the new credentials automatically — no restart needed.

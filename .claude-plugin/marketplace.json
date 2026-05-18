@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "ccrotate",
-      "version": "0.1.3",
-      "description": "Slash commands for inspecting and operating ccrotate through local or ccrotate-serve cloud mode.",
+      "version": "0.2.0",
+      "description": "Slash commands for inspecting and operating ccrotate through local or ccrotate-serve cloud mode, with server-side interception that works under full pool exhaustion.",
       "author": {
         "name": "kkroo"
       },
