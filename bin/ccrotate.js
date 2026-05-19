@@ -268,6 +268,21 @@ program
     }
   });
 
+program
+  .command('state-server')
+  .description('Run HTTP server exposing /state/* rotation-state endpoints (read/write profiles, current, tier-cache, cooldowns)')
+  .option('--port <port>', 'TCP port to bind', '4002')
+  .option('--bind <host>', 'address to bind', '0.0.0.0')
+  .option('--dir <path>', 'state directory to serve (default: ~/.ccrotate)')
+  .action(async (options) => {
+    try {
+      await ccrotate.stateServer(options);
+    } catch (error) {
+      console.error(chalk.red(`Error: ${error.message}`));
+      process.exit(1);
+    }
+  });
+
 program.parse();
 
 if (!process.argv.slice(2).length) {
