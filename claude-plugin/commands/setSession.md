@@ -9,7 +9,10 @@ description: Paste a fresh claude.ai sessionKey for a pool account and trigger r
 Paste a fresh `sessionKey` cookie value for an account that the auth-bot can't
 auto-recover via email-magic-link (i.e. anything `GMAIL_REFRESH_TOKEN` can't
 read — most accounts that aren't a `@gmail.com` alias of the configured Gmail
-identity). Usage:
+identity). Also doubles as a one-shot **register-new-account** when the email
+isn't in the pool yet — see "New-account auto-register" below.
+
+Usage:
 
 `/ccrotate:setSession user@example.com sk-ant-sid01-...`
 
@@ -31,6 +34,25 @@ ccrotate-serve intercepts the marker and:
    different account than the email you claimed; tokens were correctly
    written to the other account's profile (useful side effect) but the
    originally-requested account still needs its own sessionKey.
+
+## New-account auto-register
+
+If the email isn't in the pool yet, the bot's `/setSession` returns 400
+`email not in claude pool (N known)`. The slash command now auto-falls
+back to `/register` (same `{email,target,sessionKey}` payload), which
+adds the account to the pool AND drives the relogin in one shot. On
+success the response reads:
+
+```
+setSession: ✓ <email> registered as new pool member + relogged in.
+  ✓ Account <email> saved successfully.
+  Next tier-cache refresh tick will reflect updated quota status.
+```
+
+This collapses the pre-existing manual `/ccrotate:register` recipe
+(port-forward + curl) into the same slash command. No special flag —
+just paste the sessionKey for any email, existing or new, and the
+auto-bot figures out which path to take.
 
 ## Where to grab a sessionKey
 
