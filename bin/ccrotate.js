@@ -34,9 +34,18 @@ program
   .command('snap')
   .description('Save current account information')
   .option('--force', 'Skip confirmation prompt when overwriting existing account')
+  .option(
+    '--email <addr>',
+    'Pin the profile slot to this email instead of deriving it from '
+      + '~/.claude.json (claude) / id_token (codex). The identity guard '
+      + 'still validates that the live token belongs to <addr> and refuses '
+      + 'if not. Useful for callers that already know which account the '
+      + 'CLI just logged in as and need snap to be deterministic across a '
+      + 'concurrent profile switch.',
+  )
   .action(async (options) => {
     try {
-      await ccrotate.snap(options.force);
+      await ccrotate.snap(options.force, { email: options.email });
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);
