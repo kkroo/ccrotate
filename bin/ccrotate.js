@@ -161,12 +161,12 @@ program
   });
 
 program
-  .command('refresh-one')
+  .command('refresh-one [email]')
   .alias('r1')
-  .description('Refresh one stale account (for cron use)')
-  .action(async () => {
+  .description('Refresh one stale account, or refresh a specific account by email')
+  .action(async (email) => {
     try {
-      await ccrotate.refreshOne();
+      await ccrotate.refreshOne(email);
     } catch (error) {
       console.error(chalk.red(`Error: ${error.message}`));
       process.exit(1);

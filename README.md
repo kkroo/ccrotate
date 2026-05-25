@@ -43,9 +43,9 @@ When `ccrotate` is launched from Codex, it auto-detects that runtime from `CODEX
 
 - Active auth source: `~/.codex/auth.json`
 - Saved profiles: `~/.ccrotate/profiles.codex.json`
-- Supported commands in Codex mode: `snap`, `list`, `switch`, `next`, `remove`, `status`, `refresh`, `when`
+- Supported commands in Codex mode: `snap`, `list`, `switch`, `next`, `remove`, `status`, `refresh`, `refresh-one`, `when`
 - `next` in Codex mode probes saved accounts and picks one with remaining quota
-- Claude-only commands still require Claude Code mode: `refresh-one`, `repair`, `tier-cache`
+- Claude-only commands still require Claude Code mode: `repair`, `tier-cache`
 - `export` / `import` work in both Claude Code and Codex mode
 
 ## 📖 Commands
