@@ -13,7 +13,9 @@ COPY --from=build /src/dist /app
 COPY --from=build /src/node_modules /app/node_modules
 # esbuild bundles import.meta.url → file:///app/cli.js; ../package.json resolves to /package.json
 RUN ln -s /app/package.json /package.json
-RUN npm install -g --ignore-scripts @openai/codex@0.130.0 \
+RUN npm install -g --ignore-scripts \
+    @openai/codex@0.130.0 \
+    @openai/codex-linux-x64@npm:@openai/codex@0.130.0-linux-x64 \
  && command -v codex \
  && codex --version
 USER node
